@@ -10,7 +10,10 @@ import { idleState } from "@/lib/action-state"
 import { requestPasswordReset } from "../actions"
 
 export function ForgotPasswordForm() {
-  const [state, formAction, pending] = useActionState(requestPasswordReset, idleState)
+  const [state, formAction, pending] = useActionState(
+    requestPasswordReset,
+    idleState,
+  )
 
   if (state.status === "success") {
     return <FormMessage state={state} />

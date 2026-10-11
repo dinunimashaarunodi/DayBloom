@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 
 import { Logo } from "@/components/layout/logo"
-import { MainNav } from "@/components/layout/main-nav"
+import { MainNav, MainNavLinks } from "@/components/layout/main-nav"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SignOutButton } from "@/features/auth/components/sign-out-button"
 import { UserSummary } from "@/features/profile/components/user-summary"
@@ -19,7 +19,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Logo href="/today" />
         </div>
         <nav aria-label="Main">
-          <MainNav variant="sidebar" />
+          <Suspense
+            fallback={<MainNavLinks variant="sidebar" pathname={null} />}
+          >
+            <MainNav variant="sidebar" />
+          </Suspense>
         </nav>
         <div className="mt-auto grid gap-2">
           <Suspense fallback={<Skeleton className="mx-3 h-9" />}>
@@ -42,7 +46,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         aria-label="Main"
         className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
-        <MainNav variant="tabs" />
+        <Suspense fallback={<MainNavLinks variant="tabs" pathname={null} />}>
+          <MainNav variant="tabs" />
+        </Suspense>
       </nav>
     </div>
   )

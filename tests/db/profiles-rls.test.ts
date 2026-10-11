@@ -14,7 +14,10 @@ describe("profiles: signup trigger and RLS", () => {
   let bob: TestUser
 
   beforeAll(async () => {
-    alice = await createTestUser({ display_name: "Alice", timezone: "Asia/Colombo" })
+    alice = await createTestUser({
+      display_name: "Alice",
+      timezone: "Asia/Colombo",
+    })
     bob = await createTestUser({ timezone: "Mars/Olympus" })
   })
 
@@ -23,7 +26,10 @@ describe("profiles: signup trigger and RLS", () => {
   })
 
   it("creates exactly one profile per new user from signup metadata", async () => {
-    const { data } = await adminClient().from("profiles").select("*").in("user_id", [alice.id, bob.id])
+    const { data } = await adminClient()
+      .from("profiles")
+      .select("*")
+      .in("user_id", [alice.id, bob.id])
     expect(data).toHaveLength(2)
     const a = data!.find((p) => p.user_id === alice.id)!
     const b = data!.find((p) => p.user_id === bob.id)!
@@ -41,7 +47,10 @@ describe("profiles: signup trigger and RLS", () => {
 
   it("hides other users' profiles", async () => {
     const client = await signedInClient(bob)
-    const { data } = await client.from("profiles").select("*").eq("user_id", alice.id)
+    const { data } = await client
+      .from("profiles")
+      .select("*")
+      .eq("user_id", alice.id)
     expect(data).toEqual([])
   })
 
@@ -71,16 +80,25 @@ describe("profiles: signup trigger and RLS", () => {
       .select("display_name, timezone")
       .single()
     expect(ok.error).toBeNull()
-    expect(ok.data).toEqual({ display_name: "Alice B", timezone: "Europe/London" })
+    expect(ok.data).toEqual({
+      display_name: "Alice B",
+      timezone: "Europe/London",
+    })
 
-    const bad = await client.from("profiles").update({ timezone: "Nowhere/City" }).eq("user_id", alice.id)
+    const bad = await client
+      .from("profiles")
+      .update({ timezone: "Nowhere/City" })
+      .eq("user_id", alice.id)
     expect(bad.error?.message).toMatch(/Unknown timezone/)
   })
 
   it("blocks changing user_id or inserting/deleting profiles directly", async () => {
     const client = await signedInClient(alice)
 
-    const move = await client.from("profiles").update({ user_id: bob.id }).eq("user_id", alice.id)
+    const move = await client
+      .from("profiles")
+      .update({ user_id: bob.id })
+      .eq("user_id", alice.id)
     expect(move.error).not.toBeNull()
 
     const insert = await client.from("profiles").insert({ user_id: alice.id })

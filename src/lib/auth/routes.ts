@@ -25,9 +25,16 @@ export function isPublicPath(pathname: string): boolean {
  * Sanitizes a post-login redirect target. Only same-site relative paths are
  * allowed, which prevents open redirects such as `?next=//evil.com`.
  */
-export function safeNextPath(next: unknown, fallback: string = HOME_PATH): string {
+export function safeNextPath(
+  next: unknown,
+  fallback: string = HOME_PATH,
+): string {
   if (typeof next !== "string" || next.length === 0) return fallback
-  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
+  if (
+    !next.startsWith("/") ||
+    next.startsWith("//") ||
+    next.startsWith("/\\")
+  ) {
     return fallback
   }
   // Reject anything a URL parser would treat as another origin.

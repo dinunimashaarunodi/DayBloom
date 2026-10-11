@@ -9,7 +9,10 @@ type FieldShellProps = {
   label: string
   hint?: string
   errors?: string[]
-  children: (aria: { "aria-invalid"?: true; "aria-describedby"?: string }) => React.ReactNode
+  children: (aria: {
+    "aria-invalid"?: true
+    "aria-describedby"?: string
+  }) => React.ReactNode
 }
 
 /** Label + control + hint + field-level error, wired up for screen readers. */
@@ -22,7 +25,10 @@ function FieldShell({ id, label, hint, errors, children }: FieldShellProps) {
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      {children({ "aria-invalid": error ? true : undefined, "aria-describedby": describedBy })}
+      {children({
+        "aria-invalid": error ? true : undefined,
+        "aria-describedby": describedBy,
+      })}
       {hint && (
         <p id={hintId} className="text-xs text-muted-foreground">
           {hint}
@@ -44,10 +50,25 @@ type FormFieldProps = React.ComponentProps<typeof Input> & {
   errors?: string[]
 }
 
-export function FormField({ name, label, hint, errors, id = name, ...props }: FormFieldProps) {
+export function FormField({
+  name,
+  label,
+  hint,
+  errors,
+  id = name,
+  ...props
+}: FormFieldProps) {
   return (
     <FieldShell id={id} label={label} hint={hint} errors={errors}>
-      {(aria) => <Input id={id} name={name} className="h-10 md:h-9" {...aria} {...props} />}
+      {(aria) => (
+        <Input
+          id={id}
+          name={name}
+          className="h-10 md:h-9"
+          {...aria}
+          {...props}
+        />
+      )}
     </FieldShell>
   )
 }
@@ -59,10 +80,25 @@ type SelectFieldProps = Omit<React.ComponentProps<"select">, "size"> & {
   errors?: string[]
 }
 
-export function SelectField({ name, label, hint, errors, id = name, ...props }: SelectFieldProps) {
+export function SelectField({
+  name,
+  label,
+  hint,
+  errors,
+  id = name,
+  ...props
+}: SelectFieldProps) {
   return (
     <FieldShell id={id} label={label} hint={hint} errors={errors}>
-      {(aria) => <NativeSelect id={id} name={name} className="w-full" {...aria} {...props} />}
+      {(aria) => (
+        <NativeSelect
+          id={id}
+          name={name}
+          className="w-full"
+          {...aria}
+          {...props}
+        />
+      )}
     </FieldShell>
   )
 }

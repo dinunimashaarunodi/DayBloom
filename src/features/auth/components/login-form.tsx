@@ -11,7 +11,13 @@ import { idleState } from "@/lib/action-state"
 
 import { signIn } from "../actions"
 
-export function LoginForm({ next, notice }: { next?: string; notice?: string }) {
+export function LoginForm({
+  next,
+  notice,
+}: {
+  next?: string
+  notice?: string
+}) {
   const [state, formAction, pending] = useActionState(signIn, idleState)
 
   return (
@@ -41,7 +47,10 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
         errors={state.fieldErrors?.password}
       />
       <div className="-mt-2 text-right text-sm">
-        <Link href="/forgot-password" className="text-muted-foreground underline-offset-4 hover:underline">
+        <Link
+          href="/forgot-password"
+          className="text-muted-foreground underline-offset-4 hover:underline"
+        >
           Forgot password?
         </Link>
       </div>

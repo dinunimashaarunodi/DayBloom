@@ -1,6 +1,13 @@
 import type * as React from "react"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 export function AuthCard({
   title,
@@ -23,7 +30,9 @@ export function AuthCard({
       </CardHeader>
       <CardContent>{children}</CardContent>
       {footer && (
-        <CardFooter className="justify-center py-4 text-sm text-muted-foreground">{footer}</CardFooter>
+        <CardFooter className="justify-center py-4 text-sm text-muted-foreground">
+          {footer}
+        </CardFooter>
       )}
     </Card>
   )

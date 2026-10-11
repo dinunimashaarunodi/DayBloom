@@ -24,7 +24,10 @@ export function validationError(
 }
 
 /** Reads text fields from FormData, skipping files and missing keys. */
-export function formValues(formData: FormData, keys: string[]): Record<string, string> {
+export function formValues(
+  formData: FormData,
+  keys: string[],
+): Record<string, string> {
   const values: Record<string, string> = {}
   for (const key of keys) {
     const value = formData.get(key)

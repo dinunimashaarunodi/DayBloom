@@ -6,7 +6,9 @@ export async function UserSummary() {
 
   return (
     <div className="grid min-w-0 px-3 text-sm">
-      <span className="truncate font-medium">{profile.displayName ?? "Welcome!"}</span>
+      <span className="truncate font-medium">
+        {profile.displayName ?? "Welcome!"}
+      </span>
       <span className="truncate text-muted-foreground">{profile.email}</span>
     </div>
   )

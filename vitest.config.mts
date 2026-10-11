@@ -13,6 +13,9 @@ export default defineConfig({
           name: "unit",
           environment: "node",
           include: ["tests/unit/**/*.test.ts"],
+          // A deliberately unusual machine timezone (UTC+12:45/+13:45, with DST)
+          // so any code that accidentally uses the system timezone fails.
+          env: { TZ: "Pacific/Chatham" },
         },
       },
       {

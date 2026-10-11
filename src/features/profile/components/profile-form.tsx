@@ -45,7 +45,11 @@ export function ProfileForm({
           </NativeSelectOption>
         ))}
       </SelectField>
-      <Button type="submit" className="h-10 justify-self-start px-4" disabled={pending}>
+      <Button
+        type="submit"
+        className="h-10 justify-self-start px-4"
+        disabled={pending}
+      >
         {pending ? "Saving…" : "Save changes"}
       </Button>
     </form>

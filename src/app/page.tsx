@@ -14,14 +14,24 @@ export default function LandingPage() {
       <div className="grid max-w-md gap-3">
         <h1 className="text-4xl font-semibold tracking-tight">DayBloom</h1>
         <p className="text-muted-foreground">
-          Plan your day, reflect on it, and watch your progress grow, one day at a time.
+          Plan your day, reflect on it, and watch your progress grow, one day at
+          a time.
         </p>
       </div>
       <div className="flex w-full max-w-xs flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-        <Link href="/signup" className={cn(buttonVariants({ size: "lg" }), "h-10 px-5")}>
+        <Link
+          href="/signup"
+          className={cn(buttonVariants({ size: "lg" }), "h-10 px-5")}
+        >
           Create an account
         </Link>
-        <Link href="/login" className={cn(buttonVariants({ size: "lg", variant: "outline" }), "h-10 px-5")}>
+        <Link
+          href="/login"
+          className={cn(
+            buttonVariants({ size: "lg", variant: "outline" }),
+            "h-10 px-5",
+          )}
+        >
           Log in
         </Link>
       </div>

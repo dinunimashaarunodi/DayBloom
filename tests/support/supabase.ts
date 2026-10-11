@@ -20,7 +20,11 @@ export function adminClient(): SupabaseClient<Database> {
 }
 
 export function anonClient(): SupabaseClient<Database> {
-  return createClient<Database>(url(), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), options)
+  return createClient<Database>(
+    url(),
+    env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
+    options,
+  )
 }
 
 export type TestUser = { id: string; email: string; password: string }
@@ -37,18 +41,26 @@ export async function createTestUser(
     email_confirm: true,
     user_metadata: metadata,
   })
-  if (error || !data.user) throw error ?? new Error("createUser returned no user")
+  if (error || !data.user)
+    throw error ?? new Error("createUser returned no user")
   return { id: data.user.id, email, password }
 }
 
-export async function deleteTestUser(user: TestUser | undefined): Promise<void> {
+export async function deleteTestUser(
+  user: TestUser | undefined,
+): Promise<void> {
   if (user) await adminClient().auth.admin.deleteUser(user.id)
 }
 
 /** A client signed in as `user`, so every query runs under RLS as that user. */
-export async function signedInClient(user: TestUser): Promise<SupabaseClient<Database>> {
+export async function signedInClient(
+  user: TestUser,
+): Promise<SupabaseClient<Database>> {
   const client = anonClient()
-  const { error } = await client.auth.signInWithPassword({ email: user.email, password: user.password })
+  const { error } = await client.auth.signInWithPassword({
+    email: user.email,
+    password: user.password,
+  })
   if (error) throw error
   return client
 }

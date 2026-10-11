@@ -16,7 +16,9 @@ export function EmptyState({
         <Icon className="size-6 text-muted-foreground" aria-hidden="true" />
       </div>
       <h2 className="font-medium">{title}</h2>
-      {children && <div className="max-w-sm text-sm text-muted-foreground">{children}</div>}
+      {children && (
+        <div className="max-w-sm text-sm text-muted-foreground">{children}</div>
+      )}
     </div>
   )
 }

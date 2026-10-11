@@ -8,7 +8,9 @@ export const profileSchema = z.object({
     .trim()
     .max(80, "Use 80 characters or fewer.")
     .transform((value) => value || null),
-  timezone: z.string().refine(isValidTimeZone, "Choose a timezone from the list."),
+  timezone: z
+    .string()
+    .refine(isValidTimeZone, "Choose a timezone from the list."),
 })
 
 export type ProfileInput = z.infer<typeof profileSchema>

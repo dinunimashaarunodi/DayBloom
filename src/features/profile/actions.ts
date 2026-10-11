@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache"
 
-import { type ActionState, formValues, validationError } from "@/lib/action-state"
+import {
+  type ActionState,
+  formValues,
+  validationError,
+} from "@/lib/action-state"
 import { getCurrentUser } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -20,11 +24,18 @@ export async function updateProfile(
   const supabase = await createClient()
   const { error } = await supabase
     .from("profiles")
-    .update({ display_name: parsed.data.displayName, timezone: parsed.data.timezone })
+    .update({
+      display_name: parsed.data.displayName,
+      timezone: parsed.data.timezone,
+    })
     .eq("user_id", user.id)
 
   if (error) {
-    return { status: "error", message: "We couldn't save your changes. Please try again.", values }
+    return {
+      status: "error",
+      message: "We couldn't save your changes. Please try again.",
+      values,
+    }
   }
 
   revalidatePath("/", "layout")

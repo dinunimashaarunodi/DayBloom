@@ -9,7 +9,10 @@ export const metadata: Metadata = { title: "Choose a new password" }
 // /auth/confirm created from the email link.
 export default function ResetPasswordPage() {
   return (
-    <AuthCard title="Choose a new password" description="You'll use it next time you log in.">
+    <AuthCard
+      title="Choose a new password"
+      description="You'll use it next time you log in."
+    >
       <ResetPasswordForm />
     </AuthCard>
   )

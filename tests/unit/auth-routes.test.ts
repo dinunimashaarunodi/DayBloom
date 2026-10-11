@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest"
 
-import { HOME_PATH, isGuestOnlyPath, isPublicPath, safeNextPath } from "@/lib/auth/routes"
+import {
+  HOME_PATH,
+  isGuestOnlyPath,
+  isPublicPath,
+  safeNextPath,
+} from "@/lib/auth/routes"
 
 describe("safeNextPath", () => {
   it("keeps same-site relative paths, including query and hash", () => {
     expect(safeNextPath("/settings")).toBe("/settings")
-    expect(safeNextPath("/tasks?filter=today#top")).toBe("/tasks?filter=today#top")
+    expect(safeNextPath("/tasks?filter=today#top")).toBe(
+      "/tasks?filter=today#top",
+    )
   })
 
   it.each([
@@ -38,7 +45,13 @@ describe("route access rules", () => {
   })
 
   it("protects app pages, password reset, and unknown paths", () => {
-    for (const path of ["/today", "/tasks", "/settings", "/reset-password", "/anything-else"]) {
+    for (const path of [
+      "/today",
+      "/tasks",
+      "/settings",
+      "/reset-password",
+      "/anything-else",
+    ]) {
       expect(isPublicPath(path)).toBe(false)
     }
   })

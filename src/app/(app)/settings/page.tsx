@@ -2,7 +2,13 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { PageHeader } from "@/components/layout/page-header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SignOutButton } from "@/features/auth/components/sign-out-button"
 import { ProfileForm } from "@/features/profile/components/profile-form"
@@ -21,7 +27,9 @@ export default function SettingsPage() {
             <CardTitle>
               <h2>Profile</h2>
             </CardTitle>
-            <CardDescription>How DayBloom greets you and when your day starts.</CardDescription>
+            <CardDescription>
+              How DayBloom greets you and when your day starts.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Suspense fallback={<Skeleton className="h-40" />}>

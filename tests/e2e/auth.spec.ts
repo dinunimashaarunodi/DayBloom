@@ -1,6 +1,11 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 
-import { createTestUser, deleteTestUser, type TestUser } from "../support/supabase"
+import {
+  createTestUser,
+  deleteTestUser,
+  type TestUser,
+} from "../support/supabase"
+import { logIn as submitLogin } from "./helpers"
 
 let user: TestUser
 
@@ -12,13 +17,15 @@ test.afterEach(async () => {
   await deleteTestUser(user)
 })
 
-async function logIn(page: Page, email = user.email, password = user.password) {
-  await page.getByLabel("Email").fill(email)
-  await page.getByLabel("Password", { exact: true }).fill(password)
-  await page.getByRole("button", { name: "Log in" }).click()
-}
+const logIn = (
+  page: Parameters<typeof submitLogin>[0],
+  email = user.email,
+  password = user.password,
+) => submitLogin(page, email, password)
 
-test("signed-out visitors are sent to log in, then back where they were going", async ({ page }) => {
+test("signed-out visitors are sent to log in, then back where they were going", async ({
+  page,
+}) => {
   await page.goto("/settings")
   await expect(page).toHaveURL(/\/login\?next=%2Fsettings$/)
 
@@ -30,11 +37,15 @@ test("signed-out visitors are sent to log in, then back where they were going", 
 test("wrong password shows a friendly error", async ({ page }) => {
   await page.goto("/login")
   await logIn(page, user.email, "wrong-password-1")
-  await expect(page.getByText("That email and password don't match")).toBeVisible()
+  await expect(
+    page.getByText("That email and password don't match"),
+  ).toBeVisible()
   await expect(page.getByLabel("Email")).toHaveValue(user.email)
 })
 
-test("signup validates fields before contacting the server", async ({ page }) => {
+test("signup validates fields before contacting the server", async ({
+  page,
+}) => {
   await page.goto("/signup")
   await page.getByLabel("Email").fill("not-an-email")
   await page.getByLabel("Password").fill("short")
@@ -43,7 +54,10 @@ test("signup validates fields before contacting the server", async ({ page }) =>
   await expect(page.getByText("Use at least 8 characters.")).toBeVisible()
 })
 
-test("happy path: log in, see today, update profile, sign out", async ({ page, isMobile }) => {
+test("happy path: log in, see today, update profile, sign out", async ({
+  page,
+  isMobile,
+}) => {
   await page.goto("/login")
   await logIn(page)
 
@@ -55,7 +69,10 @@ test("happy path: log in, see today, update profile, sign out", async ({ page, i
   await expect(page).toHaveURL(/\/today$/)
 
   // Navigate with the visible nav (sidebar on desktop, bottom tabs on mobile).
-  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Settings" }).click()
+  await page
+    .getByRole("navigation", { name: "Main" })
+    .getByRole("link", { name: "Settings" })
+    .click()
   await expect(page).toHaveURL(/\/settings$/)
 
   await page.getByLabel("Name").fill("Ama Perera")
@@ -64,11 +81,15 @@ test("happy path: log in, see today, update profile, sign out", async ({ page, i
   await expect(page.getByText("Saved.")).toBeVisible()
 
   await page.goto("/today")
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Ama Perera")
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Ama Perera",
+  )
 
   // No horizontal scrolling at phone width.
   if (isMobile) {
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    )
     expect(overflow).toBeLessThanOrEqual(0)
   }
 

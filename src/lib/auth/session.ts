@@ -26,5 +26,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
     redirect(LOGIN_PATH)
   }
 
-  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : "" }
+  return {
+    id: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : "",
+  }
 })

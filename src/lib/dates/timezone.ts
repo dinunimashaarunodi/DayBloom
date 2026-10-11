@@ -1,5 +1,7 @@
-// The only place for timezone logic (see CLAUDE.md). Phase 2 extends this
-// with local-day calculations. Keep it free of React and Next.js imports.
+// Timezone validation, listing and clock-time helpers. Calendar-day logic lives
+// in local-date.ts. Together they are the only place for timezone logic
+// (see CLAUDE.md). Keep them free of React and Next.js imports.
+import { formatLocalDate, toLocalDate } from "./local-date"
 
 export const DEFAULT_TIMEZONE = "UTC"
 
@@ -24,13 +26,12 @@ export function listTimeZones(include?: string): string[] {
 }
 
 /** e.g. "Saturday 11 October" for the calendar day `now` falls on in `tz`. */
-export function formatLongDate(now: Date, tz: string, locale = "en-GB"): string {
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: tz,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(now)
+export function formatLongDate(
+  now: Date,
+  tz: string,
+  locale = "en-GB",
+): string {
+  return formatLocalDate(toLocalDate(now, tz), "long", locale)
 }
 
 /** Hour of day (0–23) at `now` in `tz`, used for the greeting. */

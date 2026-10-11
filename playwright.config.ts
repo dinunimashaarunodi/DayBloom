@@ -13,6 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
   timeout: 60_000,
+  expect: { timeout: 10_000 },
   use: {
     baseURL,
     trace: "retain-on-failure",
@@ -22,7 +23,8 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "npm run dev",
+    // Production build: realistic and avoids dev-mode compile delays.
+    command: "npm run build && npm run start",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

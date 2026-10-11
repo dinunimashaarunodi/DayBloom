@@ -3,7 +3,11 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { type ActionState, formValues, validationError } from "@/lib/action-state"
+import {
+  type ActionState,
+  formValues,
+  validationError,
+} from "@/lib/action-state"
 import { HOME_PATH, LOGIN_PATH, safeNextPath } from "@/lib/auth/routes"
 import { getCurrentUser } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
@@ -20,23 +24,31 @@ import {
 async function confirmUrl(next: string): Promise<string> {
   const h = await headers()
   const origin =
-    h.get("origin") ?? `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`
+    h.get("origin") ??
+    `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`
   return `${origin}/auth/confirm?next=${encodeURIComponent(next)}`
 }
 
-export async function signIn(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function signIn(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const values = formValues(formData, ["email"])
   const parsed = signInSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return validationError(parsed.error, values)
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword(parsed.data)
-  if (error) return { status: "error", message: friendlyAuthError(error), values }
+  if (error)
+    return { status: "error", message: friendlyAuthError(error), values }
 
   redirect(safeNextPath(formData.get("next")))
 }
 
-export async function signUp(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function signUp(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const values = formValues(formData, ["displayName", "email"])
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return validationError(parsed.error, values)
@@ -52,7 +64,8 @@ export async function signUp(_prev: ActionState, formData: FormData): Promise<Ac
       data: { display_name: displayName, timezone },
     },
   })
-  if (error) return { status: "error", message: friendlyAuthError(error), values }
+  if (error)
+    return { status: "error", message: friendlyAuthError(error), values }
 
   // Same message whether or not the email was already registered, so the form
   // can't be used to discover who has an account.
@@ -71,9 +84,12 @@ export async function requestPasswordReset(
   if (!parsed.success) return validationError(parsed.error, values)
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: await confirmUrl("/reset-password"),
-  })
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.data.email,
+    {
+      redirectTo: await confirmUrl("/reset-password"),
+    },
+  )
   if (error?.code?.startsWith("over_")) {
     return { status: "error", message: friendlyAuthError(error), values }
   }
@@ -94,7 +110,9 @@ export async function updatePassword(
   if (!parsed.success) return validationError(parsed.error)
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  })
   if (error) return { status: "error", message: friendlyAuthError(error) }
 
   redirect(HOME_PATH)

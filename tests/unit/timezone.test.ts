@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { formatLongDate, isValidTimeZone, listTimeZones, localHour } from "@/lib/dates/timezone"
+import {
+  formatLongDate,
+  isValidTimeZone,
+  listTimeZones,
+  localHour,
+} from "@/lib/dates/timezone"
 
 describe("isValidTimeZone", () => {
   it("accepts IANA names and common aliases", () => {
@@ -34,7 +39,9 @@ describe("local date and hour", () => {
 
   it("formats the calendar day in the user's timezone, not the server's", () => {
     expect(formatLongDate(instant, "Asia/Colombo")).toBe("Monday 12 October")
-    expect(formatLongDate(instant, "America/New_York")).toBe("Sunday 11 October")
+    expect(formatLongDate(instant, "America/New_York")).toBe(
+      "Sunday 11 October",
+    )
   })
 
   it("returns the local hour across half-hour offsets", () => {

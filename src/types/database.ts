@@ -38,12 +38,61 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          deleted_at: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          position: number
+          priority: string
+          status: string
+          times_moved: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          position?: number
+          priority?: string
+          status?: string
+          times_moved?: number
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          position?: number
+          priority?: string
+          status?: string
+          times_moved?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_local_date: { Args: never; Returns: string }
+      reorder_tasks: { Args: { task_ids: string[] }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

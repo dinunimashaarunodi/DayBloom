@@ -2,5 +2,7 @@
 try {
   process.loadEnvFile(".env.local")
 } catch {
-  throw new Error("Missing .env.local. Copy .env.example and fill in the Supabase values.")
+  throw new Error(
+    "Missing .env.local. Copy .env.example and fill in the Supabase values.",
+  )
 }
