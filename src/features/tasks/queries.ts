@@ -122,3 +122,25 @@ export async function getTask(id: string): Promise<Task | null> {
   if (error) failed()
   return data as Task | null
 }
+
+/** Unfinished and done tasks due on the local days from..to (inclusive), for the calendar. */
+export async function getTasksInRange(
+  from: LocalDate,
+  to: LocalDate,
+): Promise<Task[]> {
+  const user = await getCurrentUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(TASK_COLUMNS)
+    .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .in("status", ["todo", "done"])
+    .gte("due_date", from)
+    .lte("due_date", to)
+    .order("due_date")
+    .order("position")
+    .order("created_at")
+  if (error) failed()
+  return asTasks(data)
+}

@@ -2,8 +2,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Dark mode follows the operating system setting. */
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/*
+ * Dark mode is a class on <html>, set before first paint by THEME_SCRIPT
+ * (src/lib/theme.ts) from the user's choice: system, light or dark.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * DayBloom design system (see CLAUDE.md, "Design system").
+ * Calm, nature-inspired: cream page, white cards, forest green for actions,
+ * pastel accents only to mark a module. Contrast checked against WCAG AA.
+ */
 
 @theme inline {
   --color-background: var(--background);
@@ -41,6 +50,19 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Module accents (backgrounds). Text on them uses foreground or *-ink. */
+  --color-sage: var(--sage);
+  --color-sage-ink: var(--sage-ink);
+  --color-lavender: var(--lavender);
+  --color-peach: var(--peach);
+  --color-mint: var(--mint);
+  --color-rose: var(--rose);
+  --color-gold: var(--gold);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -51,76 +73,113 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --warning: oklch(0.555 0.13 60);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  color-scheme: light;
+  --background: #ffffff; /* white page (cream #f7f6f0 kept for muted areas) */
+  --foreground: #26352d; /* deep evergreen */
+  --card: #ffffff;
+  --card-foreground: #26352d;
+  --popover: #ffffff;
+  --popover-foreground: #26352d;
+  --primary: #315c49; /* forest green: actions, selected navigation */
+  --primary-foreground: #ffffff;
+  --secondary: #e5ebdd; /* sage */
+  --secondary-foreground: #26352d;
+  --muted: #f4f3ee;
+  --muted-foreground: #647064;
+  --accent: #e5ebdd;
+  --accent-foreground: #26352d;
+  --destructive: #b4443a;
+  --warning: #8a5a1f;
+  --border: #e6e3d9;
+  --input: #8e978c; /* 3:1 on white, so form fields stay visible */
+  --ring: #315c49;
+
+  --sage: #e5ebdd;
+  --sage-ink: #4e5c52;
+  --lavender: #ede7f6;
+  --peach: #f7e8d5;
+  --mint: #dcece7;
+  --rose: #f5e3e1;
+  --gold: #b08a3e; /* icons and accents only, never body text */
+
+  --chart-1: #315c49;
+  --chart-2: #7fa38d;
+  --chart-3: #b7a1d6;
+  --chart-4: #e0b98a;
+  --chart-5: #d99a93;
+
+  --shadow-soft: 0 1px 2px rgb(38 53 45 / 0.05), 0 2px 8px rgb(38 53 45 / 0.05);
+  --shadow-lift:
+    0 2px 6px rgb(38 53 45 / 0.06), 0 8px 24px rgb(38 53 45 / 0.06);
+
+  --radius: 0.75rem; /* buttons 12px, cards (radius-xl) ~17px */
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #26352d;
+  --sidebar-primary: #315c49;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1e8;
+  --sidebar-accent-foreground: #26352d;
+  --sidebar-border: #e6e3d9;
+  --sidebar-ring: #315c49;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --warning: oklch(0.82 0.14 80);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
-  }
+:root.dark {
+  color-scheme: dark;
+  --background: #131915;
+  --foreground: #e8ede6;
+  --card: #1b231e;
+  --card-foreground: #e8ede6;
+  --popover: #1b231e;
+  --popover-foreground: #e8ede6;
+  --primary: #8fc2a7;
+  --primary-foreground: #0f2419;
+  --secondary: #26332a;
+  --secondary-foreground: #e8ede6;
+  --muted: #222b25;
+  --muted-foreground: #a3afa5;
+  --accent: #26332a;
+  --accent-foreground: #e8ede6;
+  --destructive: #e88a80;
+  --warning: #e2b87a;
+  --border: #2c3630;
+  --input: #6e7b72;
+  --ring: #8fc2a7;
+
+  --sage: #26332a;
+  --sage-ink: #c3d1c0;
+  --lavender: #2c2738;
+  --peach: #3a2e22;
+  --mint: #1f3330;
+  --rose: #3a2626;
+  --gold: #d9b56a;
+
+  --chart-1: #8fc2a7;
+  --chart-2: #5f8a72;
+  --chart-3: #b7a1d6;
+  --chart-4: #e0b98a;
+  --chart-5: #d99a93;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.25);
+  --shadow-lift: 0 4px 16px rgb(0 0 0 / 0.35);
+
+  --sidebar: #161d18;
+  --sidebar-foreground: #e8ede6;
+  --sidebar-primary: #8fc2a7;
+  --sidebar-primary-foreground: #0f2419;
+  --sidebar-accent: #222b25;
+  --sidebar-accent-foreground: #e8ede6;
+  --sidebar-border: #2c3630;
+  --sidebar-ring: #8fc2a7;
+}
+
+/* A white card with a thin neutral border and a very soft shadow. */
+@utility surface {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  box-shadow: var(--shadow-soft);
 }
 
 @layer base {
@@ -132,5 +191,21 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight text-foreground;
+  }
+}
+
+/* Restrained motion; nothing moves for people who ask the OS for less. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

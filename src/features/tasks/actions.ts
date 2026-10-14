@@ -10,9 +10,13 @@ import {
   validationError,
 } from "@/lib/action-state"
 import { getCurrentUser } from "@/lib/auth/session"
+import { localDateSchema } from "@/lib/dates/local-date"
 import { createClient } from "@/lib/supabase/server"
 
+import { getUserToday } from "./queries"
 import {
+  TASK_DECISIONS,
+  type TaskDecision,
   createTaskSchema,
   taskIdSchema,
   taskIdsSchema,
@@ -139,4 +143,48 @@ export async function deleteTask(id: string): Promise<void> {
     .eq("id", id)
   revalidateTaskPages()
   redirect("/tasks")
+}
+
+/**
+ * The "Needs a decision" choices for an unfinished task from an earlier day.
+ * Postponing is counted by the tasks trigger (times_moved).
+ */
+export async function decideTask(
+  id: string,
+  decision: TaskDecision,
+  date?: string,
+): Promise<MutationResult> {
+  await getCurrentUser()
+  if (
+    !taskIdSchema.safeParse(id).success ||
+    !TASK_DECISIONS.includes(decision)
+  ) {
+    return { error: SAVE_ERROR }
+  }
+  const { today } = await getUserToday()
+
+  let update: { due_date: string } | { status: "dropped" }
+  if (decision === "letGo") {
+    update = { status: "dropped" }
+  } else if (decision === "today") {
+    update = { due_date: today }
+  } else {
+    const parsed = localDateSchema.safeParse(date)
+    if (!parsed.success || parsed.data < today) {
+      return { error: "Pick today or a later date." }
+    }
+    update = { due_date: parsed.data }
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(update)
+    .eq("id", id)
+    .eq("status", "todo")
+    .select("id")
+  if (error || data.length === 0) return { error: SAVE_ERROR }
+
+  revalidateTaskPages()
+  return {}
 }

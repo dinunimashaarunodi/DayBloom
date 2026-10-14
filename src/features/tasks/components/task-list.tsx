@@ -19,6 +19,7 @@ export function TaskList({
   today,
   reorderable = false,
   hideDueToday = false,
+  hideDue = false,
   label,
 }: {
   tasks: Task[]
@@ -27,10 +28,14 @@ export function TaskList({
   reorderable?: boolean
   /** Don't repeat "Today" on a list that is all today's tasks. */
   hideDueToday?: boolean
+  /** Never show the due date (e.g. a single day on the calendar). */
+  hideDue?: boolean
   label: string
 }) {
   const [optimisticTasks, applyOptimistic] = useOptimistic(tasks)
-  const [, startTransition] = useTransition()
+  // Controls are disabled while a change saves: Next.js sends server actions
+  // one at a time, and a second change queued behind the first could be lost.
+  const [saving, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
   function toggle(task: Task, done: boolean) {
@@ -63,14 +68,21 @@ export function TaskList({
           {error}
         </p>
       )}
-      <ul aria-label={label} className="divide-y rounded-xl border">
+      <ul aria-label={label} className="divide-y overflow-hidden surface">
         {optimisticTasks.map((task, index) => {
           const done = task.status === "done"
           const showDue =
-            task.due_date && !(hideDueToday && task.due_date === today)
+            !hideDue &&
+            task.due_date &&
+            !(hideDueToday && task.due_date === today)
           return (
-            <li key={task.id} className="flex items-center gap-3 px-3 py-2.5">
+            <li
+              key={task.id}
+              className="flex items-center gap-3 px-4 py-3 transition-colors duration-200 hover:bg-muted/40"
+            >
               <Checkbox
+                className="size-5 rounded-md"
+                disabled={saving}
                 checked={done}
                 onCheckedChange={(checked) => toggle(task, checked === true)}
                 aria-label={`${done ? "Mark as not done" : "Mark as done"}: ${task.title}`}
@@ -115,7 +127,7 @@ export function TaskList({
                     size="icon"
                     className="size-9"
                     aria-label={`Move up: ${task.title}`}
-                    disabled={index === 0}
+                    disabled={saving || index === 0}
                     onClick={() => move(index, -1)}
                   >
                     <ChevronUp />
@@ -125,7 +137,7 @@ export function TaskList({
                     size="icon"
                     className="size-9"
                     aria-label={`Move down: ${task.title}`}
-                    disabled={index === optimisticTasks.length - 1}
+                    disabled={saving || index === optimisticTasks.length - 1}
                     onClick={() => move(index, 1)}
                   >
                     <ChevronDown />

@@ -48,7 +48,7 @@ test("signup validates fields before contacting the server", async ({
 }) => {
   await page.goto("/signup")
   await page.getByLabel("Email").fill("not-an-email")
-  await page.getByLabel("Password").fill("short")
+  await page.getByLabel("Password", { exact: true }).fill("short")
   await page.getByRole("button", { name: "Create account" }).click()
   await expect(page.getByText("Enter a valid email address.")).toBeVisible()
   await expect(page.getByText("Use at least 8 characters.")).toBeVisible()

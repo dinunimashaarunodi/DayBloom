@@ -5,8 +5,8 @@ Anyone can sign up, and each user sees only their own data.
 
 ## Current phase
 
-**Phase 3 is built and all automated checks pass. Waiting for the user's approval.** Phase 1 still needs a manual check with a real email signup.
-Next up: Phase 4. Update this line whenever a phase is completed and verified.
+**Phase 5 is built and all automated checks pass. Waiting for the user's approval.** Phase 1 still needs a manual check with a real email signup.
+Next up: Phase 6. Update this line whenever a phase is completed and verified.
 
 | Phase | Scope                                                                                                          | Status |
 | ----- | -------------------------------------------------------------------------------------------------------------- | ------ |
@@ -14,8 +14,8 @@ Next up: Phase 4. Update this line whenever a phase is completed and verified.
 | 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                       | ✅     |
 | 2     | `lib/dates` timezone utilities and tests                                                                       | ✅     |
 | 3     | Tasks and Today page                                                                                           | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                                          |        |
-| 5     | Day close, review, "Needs a decision" flow, history                                                            |        |
+| 4     | Calendar (month/week, one-off events)                                                                          | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                                            | ✅     |
 | 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                          |        |
 | 7+    | Habits → Journal → Focus timer → Finance → Workouts → Goals → Languages → Achievements → PWA and notifications |        |
 
@@ -79,13 +79,19 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - `todayIn(tz, now)` and `toLocalDate(instant, tz)` convert an instant to a day.
   - `localDayRange(date, tz)` gives the half-open `[start, end)` for querying `timestamptz` columns.
   - `addDays`, `daysBetween`, `compareLocalDates` and `formatLocalDate` need no timezone.
-  - Validate form dates with `localDateSchema`.
+  - Validate form dates with `localDateSchema`, and times with `localTimeSchema` ("HH:MM").
+  - `localDateTimeToInstant(date, time, tz)` and `toLocalTime(instant, tz)` convert times of day. A repeated time (clocks went back) resolves to the earlier instant; a skipped time resolves to the moment of the jump.
+  - Calendar weeks start on Monday (`startOfWeek`, `monthGrid`). This isn't a user setting yet.
 - Never derive "today" from the server clock or `toISOString().slice(0,10)`. ESLint blocks the ISO-slice pattern and any date library outside `lib/dates`.
 - Always pass `now` in; date helpers never read the clock.
 - Unit tests run with the machine timezone set to `Pacific/Chatham`, so code that relies on the system timezone fails.
 - Never add 24h in milliseconds to move a day. Use date arithmetic, which keeps daylight-saving changes correct.
-- Closing a day is lazy and idempotent: `close_day()` runs when the app opens, with an hourly `pg_cron` job as a backup.
-  - The day snapshot (`days.summary`) is frozen at close.
+- Closing a day is lazy and idempotent:
+  - `close_past_days()` runs when Today or History loads (`ensurePastDaysClosed`).
+  - The hourly `pg_cron` job `daybloom-close-days` (minute 5) runs `private.close_days_for_everyone()`.
+  - The day snapshot (`days.summary`) is frozen at close. A planned task counts as done only if it was finished by the end of that day.
+  - Closing never changes tasks.
+- Reviews (mood, energy, wins, reflection) are saved with `save_day_review()`, for today and the 7 days before. Only the closing function writes `status` and `summary`.
 - **Unfinished tasks are never moved automatically.** Show a friendly "Needs a decision" prompt with three choices:
   - Do it today
   - Choose a date
@@ -93,6 +99,10 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 - Never add snooze or postpone shortcuts. Warn the user when `times_moved >= 2`.
   - `times_moved` is maintained by a trigger: it counts moving an unfinished, dated task later or removing its date. Clients can't write it.
   - Tasks have no hard delete: "Delete" sets `deleted_at`, and "Let it go" sets status `dropped`.
+- Events come in two shapes, enforced by the `events_shape` constraint:
+  - Timed events store instants (`starts_at`, `ends_at`), so their local day follows the user's timezone.
+  - All-day events store calendar days (`start_date`..`end_date`, inclusive) and never shift.
+  - The form only creates same-day timed events, but the logic handles events that cross midnight.
 - Timers store `started_at` in the database and compute elapsed time. They never count ticks in the browser.
 
 ## Database and Supabase security rules
@@ -111,6 +121,9 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 - Soft-delete records that carry history (`deleted_at` or `archived_at`).
 - `SECURITY DEFINER` functions are allowed only when necessary. They must set `search_path = ''` and check `auth.uid()`. The only exception is triggers on `auth.users`, where no user is set.
 - Revoke `execute` on trigger and helper functions from `public, anon, authenticated` so they aren't exposed through RPC.
+- Internal functions go in the `private` schema, which the Data API doesn't expose.
+- After a migration, run `npx supabase db advisors --linked`.
+  - The only accepted warning is `close_past_days()` (an intentional, `auth.uid()`-checked SECURITY DEFINER function).
 - Authorize on the server with `supabase.auth.getUser()` or `getClaims()`, never `getSession()`.
 - Secrets:
   - The secret (service-role) key is server-only and may never appear in `NEXT_PUBLIC_*` variables or client code.
@@ -118,20 +131,60 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 - After each schema change, regenerate the types with `npm run db:types`.
 - Supabase Auth config lives in `supabase/config.toml` and is applied with `npx supabase config push`.
   - Preview first, answering `n` to every prompt. Push only the service you changed, and never let it downgrade remote settings (OTP length, MFA, storage).
-  - The free tier rejects custom email templates until custom SMTP is configured (Phase 6). Until then, `/auth/confirm` handles the default `?code=` links.
+  - The free tier rejects custom email templates until custom SMTP is configured (Phase 6).
+- Auth emails (signup confirmation, password reset) are sent with `createEmailLinkClient()` (implicit flow) and return to `/auth/callback`.
+  - That page reads the one-time session from the URL fragment in the browser, so links work on any device.
+  - Default PKCE links only work in the browser that requested them, which broke real users.
+  - `/auth/confirm` stays for `?code=` links already sent, and for `token_hash` links once custom templates are enabled.
 
-## UI consistency
+## Design system
 
-- Use shadcn/ui components first. Check `src/components/` before creating a new component.
-- Extract a component once it is used twice or more. Don't build abstractions for single use.
-- Use Tailwind with the theme tokens from shadcn CSS variables. Don't hard-code colours.
-  - For gentle warnings, use the `warning` token (`text-warning`, `bg-warning/10`).
-- Support light and dark mode.
-- Design mobile-first: it must work at 375px wide with no horizontal scroll.
-- Every data view needs loading, empty and error states.
-- Forms use a Zod schema shared with the Server Action, and show field-level errors.
-- Use accessible labels, keyboard navigation and visible focus states.
-- The tone is friendly and encouraging, without guilt-tripping or nudging the user to postpone.
+Calm, premium and nature-inspired, never a generic admin dashboard. Tokens live in `src/app/globals.css`. Always use the tokens; don't hard-code colours.
+
+- **Colours (light):**
+  - page `background` #FFFFFF (white, by request), `card` #FFFFFF, `muted` #F4F3EE (soft cream for bars and hovers), `foreground` #26352D (evergreen)
+  - `primary` #315C49 (forest: primary actions and the selected nav item only)
+  - `muted-foreground` #647064, `border` #E6E3D9
+  - `input` #8E978C (form-field outlines need 3:1 contrast)
+- **Theme:** users choose System, Light or Dark with `ThemeSwitcher` (in the sidebar, the mobile top bar and Settings → Appearance).
+  - The choice is stored per device in localStorage.
+  - `THEME_SCRIPT` (`src/lib/theme.ts`) sets the `.dark` class on `<html>` before first paint.
+  - Every token has a dark value under `:root.dark`, so check both themes.
+- **Module accents** come from `ACCENT_CHIP` in `src/components/accent.ts`. Use them for icon chips and small highlights only, never page themes:
+  - sage: planner, tasks, habits
+  - peach: expenses
+  - lavender: study, languages
+  - mint: workouts, wellness, reflection
+  - rose plus restrained `gold`: achievements
+- **Contrast:**
+  - Text on `sage` uses `foreground` or `sage-ink`, never `muted-foreground` (4.27:1 fails AA).
+  - `gold` is for icons only.
+- **Surfaces:**
+  - Cards and lists use the `surface` utility (≈17px radius, thin border, `shadow-soft`). shadcn `Card` matches it.
+  - Buttons and inputs use a 12px radius.
+- **Building blocks:**
+  - `PageHeader` (eyebrow, title, actions)
+  - `DashboardCard` (title, accent icon chip, optional action)
+  - `Section`
+  - `EmptyState` (accent, helpful copy, optional action)
+- **Layout:**
+  - Desktop has a 16rem sidebar and `max-w-5xl` content.
+  - Mobile has a top bar and bottom tabs, single-column grids that widen at `sm`/`lg`, and touch targets of 36–40px or more.
+- **Dashboard (Today):** show only real data.
+  - Add each module's card (study time, expenses, habits, goals, achievements) when that module is built. Never add placeholder statistics.
+- **Typography:** Geist. Page titles are `text-2xl md:text-3xl font-semibold`; section titles are `font-medium`.
+- **Motion:**
+  - Short and subtle: 200–500ms fades and zooms via `tw-animate-css`, small celebrations when finishing tasks.
+  - Everything is disabled under `prefers-reduced-motion` in `globals.css`.
+- **Accessibility:**
+  - Accessible labels, keyboard navigation and visible focus rings (`ring-ring/50`).
+  - Use native controls where possible (radios, selects, date inputs).
+- **General rules:**
+  - Use shadcn/ui first. Check `src/components/` before creating a component, and extract one once it's used twice.
+  - Every data view needs loading, empty and error states.
+  - Forms share their Zod schema with the Server Action and show field-level errors.
+  - Gentle warnings use the `warning` token.
+  - The tone is friendly and encouraging, without guilt-tripping or nudging the user to postpone.
 
 ## Commands (Windows PowerShell)
 
@@ -144,11 +197,14 @@ npm run typecheck      # next typegen + tsc --noEmit
 npm run format         # Prettier write (format:check to verify)
 npm test               # Vitest unit tests (offline)
 npm run test:db        # RLS/trigger tests against daybloom-dev (creates and deletes test users)
-npm run test:e2e       # Playwright; builds and starts production on :3000 (stop npm run dev first)
+npm run test:e2e       # Playwright; builds and starts production on :3000. Port 3000 must be free:
+                       # stop `npm run dev`, and check no leftover node.exe still listens on 3000
+$env:E2E_PORT=3100; npm run test:e2e   # or run on :3100 while `npm run dev` keeps :3000 (allowed in Supabase redirects)
 npm run build          # production build (then: npm start)
 npm run db:types       # regenerate src/types/database.ts
 
 npx supabase migration new <name>
+npx supabase db advisors --linked   # security/performance lints after schema changes
 npm run db:push        # apply migrations to the linked project (may prompt for SUPABASE_DB_PASSWORD from .env.local)
 ```
 
@@ -168,8 +224,11 @@ If PowerShell blocks npm with "running scripts is disabled", run:
    - Logic, especially dates and money, gets unit tests.
    - Every new table gets an RLS test proving that user B can't access user A's rows.
    - Each user flow gets one end-to-end happy path.
+   - E2E tests share Supabase's sign-in rate limit (about 30 per 5 minutes per IP). Seed and poll data with `adminClient()`, not extra sign-ins.
    - In E2E tests, prefer `getByRole` selectors. Cache Components keeps visited pages in the DOM, hidden, and `getByLabel`/`getByText` can match those hidden copies.
    - Any client component that uses `usePathname`, `useSearchParams` or similar URL hooks must render inside `<Suspense>`.
+   - Client controls that call server actions (checkboxes, buttons) must be disabled while their transition is pending.
+     - Next.js sends actions one at a time, and a second action queued behind the first was observed to be lost.
 4. **Definition of done.** These must all pass: `format:check`, `lint`, `typecheck`, `test` and `build`.
    - Also `test:db` after any schema change, and `test:e2e` after any user-flow change.
 5. **Finish each phase before starting the next.** Stop after each phase for the user to verify and approve.

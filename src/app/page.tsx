@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 export default function LandingPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-16 text-center">
-      <div className="rounded-full bg-muted p-4">
+      <div className="rounded-full bg-sage p-4">
         <Sprout className="size-10 text-primary" aria-hidden="true" />
       </div>
       <div className="grid max-w-md gap-3">

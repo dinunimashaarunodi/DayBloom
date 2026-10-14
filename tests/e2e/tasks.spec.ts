@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { addDays, todayIn } from "@/lib/dates/local-date"
 
 import {
+  adminClient,
   createTestUser,
   deleteTestUser,
   signedInClient,
@@ -29,6 +30,27 @@ async function seedTasks(tasks: { title: string; due_date: string | null }[]) {
   const client = await signedInClient(user)
   const { error } = await client.from("tasks").insert(tasks)
   if (error) throw error
+}
+
+/**
+ * Waits until the database shows the task in the expected state. Uses the
+ * admin client so polling doesn't count against Supabase's sign-in rate limit.
+ */
+async function waitForTask(
+  title: string,
+  expected: { due_date?: string; status?: string },
+) {
+  await expect
+    .poll(async () => {
+      const { data } = await adminClient()
+        .from("tasks")
+        .select("due_date, status")
+        .eq("user_id", user.id)
+        .eq("title", title)
+        .single()
+      return data
+    })
+    .toMatchObject(expected)
 }
 
 const list = (page: Page, name: string) =>
@@ -72,20 +94,63 @@ test("plan today: add, reorder, complete", async ({ page }) => {
   ])
 })
 
-test("tasks from earlier days stay visible and are never moved automatically", async ({
+test("unfinished tasks wait for a decision: today, a new date, or let go", async ({
   page,
 }) => {
   const today = todayIn(TZ, new Date())
   await seedTasks([
     { title: "Return library book", due_date: addDays(today, -1) },
     { title: "Renew passport", due_date: addDays(today, -4) },
+    { title: "Learn the banjo", due_date: addDays(today, -2) },
+  ])
+  await page.reload()
+
+  // Nothing was moved automatically: all three wait in the card.
+  await expect(
+    page.getByRole("heading", {
+      name: "3 tasks from earlier days weren't finished",
+    }),
+  ).toBeVisible()
+  const card = list(page, "Needs a decision")
+  await expect(card.getByRole("listitem")).toHaveText([
+    /Renew passport.*4 days ago/,
+    /Learn the banjo.*2 days ago/,
+    /Return library book.*Yesterday/,
   ])
 
+  await page
+    .getByRole("group", { name: "Decide: Return library book" })
+    .getByRole("button", { name: "Do it today" })
+    .click()
+  await expect(list(page, "Today").getByRole("listitem")).toHaveText([
+    /Return library book/,
+  ])
+
+  await page
+    .getByRole("group", { name: "Decide: Renew passport" })
+    .getByRole("button", { name: "Choose a date" })
+    .click()
+  await page.getByLabel("New date for Renew passport").fill(addDays(today, 3))
+  await page.getByRole("button", { name: "Save date" }).click()
+  // Buttons are disabled while a decision saves; wait for it to be saved.
+  await waitForTask("Renew passport", { due_date: addDays(today, 3) })
+
+  await page
+    .getByRole("group", { name: "Decide: Learn the banjo" })
+    .getByRole("button", { name: "Let it go" })
+    .click()
+  await expect(
+    page.getByRole("heading", { name: /weren't finished|wasn't finished/ }),
+  ).toHaveCount(0)
+  await waitForTask("Learn the banjo", { status: "dropped" })
+
   await page.reload()
-  const earlier = list(page, "From earlier days")
-  await expect(earlier.getByRole("listitem")).toHaveText([
-    /Renew passport.*4 days ago/,
-    /Return library book.*Yesterday/,
+  await expect(
+    page.getByRole("heading", { name: /weren't finished|wasn't finished/ }),
+  ).toHaveCount(0)
+  await page.goto("/tasks?view=upcoming")
+  await expect(list(page, "upcoming tasks").getByRole("listitem")).toHaveText([
+    /Renew passport/,
   ])
 })
 
@@ -103,6 +168,8 @@ test("postponing twice shows a gentle warning; letting go removes the task", asy
     await page.getByLabel("Date").fill(addDays(today, days))
     await page.getByRole("button", { name: "Save changes" }).click()
     await expect(page.getByText("Saved.")).toBeVisible()
+    // "Saved." stays visible from the first save, so confirm each save landed.
+    await waitForTask("Clean garage", { due_date: addDays(today, days) })
   }
 
   await page.reload()

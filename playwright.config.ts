@@ -3,7 +3,8 @@ import { defineConfig, devices } from "@playwright/test"
 // The tests create throwaway users in the Supabase dev project, so they need .env.local.
 process.loadEnvFile(".env.local")
 
-const PORT = 3000
+// E2E_PORT lets the tests run while `npm run dev` keeps port 3000.
+const PORT = Number(process.env.E2E_PORT ?? 3000)
 const baseURL = `http://localhost:${PORT}`
 
 export default defineConfig({
@@ -24,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     // Production build: realistic and avoids dev-mode compile delays.
-    command: "npm run build && npm run start",
+    command: `npm run build && npm run start -- -p ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

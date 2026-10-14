@@ -53,23 +53,34 @@ export function MainNavLinks({
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center rounded-lg transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                "flex items-center rounded-lg transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 variant === "sidebar"
-                  ? "gap-3 px-3 py-2 text-sm hover:bg-sidebar-accent"
-                  : "flex-col gap-1 py-2 text-xs",
-                active
-                  ? "font-medium text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-                active && variant === "sidebar" && "bg-sidebar-accent",
+                  ? cn(
+                      "gap-3 px-3 py-2.5 text-sm",
+                      active
+                        ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground shadow-soft"
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                    )
+                  : cn(
+                      "flex-col gap-1 py-2 text-[11px]",
+                      active
+                        ? "font-medium text-primary"
+                        : "text-muted-foreground hover:text-foreground",
+                    ),
               )}
             >
-              <Icon
+              <span
                 className={cn(
-                  "size-5",
-                  active && variant === "tabs" && "text-primary",
+                  "grid place-items-center",
+                  variant === "tabs" &&
+                    cn(
+                      "h-7 w-12 rounded-full transition-colors duration-200",
+                      active && "bg-sage",
+                    ),
                 )}
-                aria-hidden="true"
-              />
+              >
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
               {label}
             </Link>
           </li>

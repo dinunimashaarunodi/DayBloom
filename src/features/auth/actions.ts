@@ -10,6 +10,7 @@ import {
 } from "@/lib/action-state"
 import { HOME_PATH, LOGIN_PATH, safeNextPath } from "@/lib/auth/routes"
 import { getCurrentUser } from "@/lib/auth/session"
+import { createEmailLinkClient } from "@/lib/supabase/email-links"
 import { createClient } from "@/lib/supabase/server"
 
 import { friendlyAuthError } from "./errors"
@@ -20,13 +21,16 @@ import {
   signUpSchema,
 } from "./schema"
 
-/** URL that Supabase email links return to. Supabase checks it against its allow-list. */
-async function confirmUrl(next: string): Promise<string> {
+/**
+ * Where Supabase email links return to: /auth/callback, which finishes sign-in
+ * in the browser (works on any device). Supabase checks it against its allow-list.
+ */
+async function emailLinkUrl(next: string): Promise<string> {
   const h = await headers()
   const origin =
     h.get("origin") ??
     `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`
-  return `${origin}/auth/confirm?next=${encodeURIComponent(next)}`
+  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`
 }
 
 export async function signIn(
@@ -54,12 +58,12 @@ export async function signUp(
   if (!parsed.success) return validationError(parsed.error, values)
 
   const { email, password, displayName, timezone } = parsed.data
-  const supabase = await createClient()
+  const supabase = createEmailLinkClient()
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: await confirmUrl(HOME_PATH),
+      emailRedirectTo: await emailLinkUrl(HOME_PATH),
       // Copied into public.profiles by the on_auth_user_created trigger.
       data: { display_name: displayName, timezone },
     },
@@ -83,11 +87,11 @@ export async function requestPasswordReset(
   const parsed = forgotPasswordSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return validationError(parsed.error, values)
 
-  const supabase = await createClient()
+  const supabase = createEmailLinkClient()
   const { error } = await supabase.auth.resetPasswordForEmail(
     parsed.data.email,
     {
-      redirectTo: await confirmUrl("/reset-password"),
+      redirectTo: await emailLinkUrl("/reset-password"),
     },
   )
   if (error?.code?.startsWith("over_")) {
@@ -97,7 +101,7 @@ export async function requestPasswordReset(
   return {
     status: "success",
     message:
-      "If an account exists for that email, we've sent a link to reset your password. Open it in this browser.",
+      "If an account exists for that email, we've sent a link to reset your password.",
   }
 }
 

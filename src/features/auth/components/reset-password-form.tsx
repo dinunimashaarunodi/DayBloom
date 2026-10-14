@@ -2,8 +2,8 @@
 
 import { useActionState } from "react"
 
-import { FormField } from "@/components/form/form-field"
 import { FormMessage } from "@/components/form/form-message"
+import { PasswordField } from "@/components/form/password-field"
 import { Button } from "@/components/ui/button"
 import { idleState } from "@/lib/action-state"
 
@@ -15,19 +15,17 @@ export function ResetPasswordForm() {
   return (
     <form action={formAction} className="grid gap-4" noValidate>
       <FormMessage state={state} />
-      <FormField
+      <PasswordField
         name="password"
         label="New password"
-        type="password"
         autoComplete="new-password"
         required
         hint="At least 8 characters, with letters and numbers."
         errors={state.fieldErrors?.password}
       />
-      <FormField
+      <PasswordField
         name="confirmPassword"
         label="Confirm new password"
-        type="password"
         autoComplete="new-password"
         required
         errors={state.fieldErrors?.confirmPassword}

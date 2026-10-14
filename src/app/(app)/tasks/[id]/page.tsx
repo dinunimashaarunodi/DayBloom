@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
+import { BackLink } from "@/components/layout/back-link"
 import { PageHeader } from "@/components/layout/page-header"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -19,13 +18,7 @@ export const metadata: Metadata = { title: "Edit task" }
 export default function TaskPage({ params }: PageProps<"/tasks/[id]">) {
   return (
     <>
-      <Link
-        href="/tasks"
-        className="mb-4 inline-flex items-center gap-1 rounded-sm text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        All tasks
-      </Link>
+      <BackLink href="/tasks" label="All tasks" />
       <PageHeader title="Edit task" />
       <Suspense fallback={<Skeleton className="h-80" />}>
         <TaskEditor params={params} />

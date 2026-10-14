@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      days: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          energy: number | null
+          id: string
+          local_date: string
+          mood: number | null
+          reflection: string | null
+          reviewed_at: string | null
+          status: string
+          summary: Json | null
+          updated_at: string
+          user_id: string
+          wins: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          energy?: number | null
+          id?: string
+          local_date: string
+          mood?: number | null
+          reflection?: string | null
+          reviewed_at?: string | null
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          user_id?: string
+          wins?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          energy?: number | null
+          id?: string
+          local_date?: string
+          mood?: number | null
+          reflection?: string | null
+          reviewed_at?: string | null
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          user_id?: string
+          wins?: string | null
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          deleted_at: string | null
+          end_date: string | null
+          ends_at: string | null
+          id: string
+          notes: string | null
+          start_date: string | null
+          starts_at: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          end_date?: string | null
+          ends_at?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          end_date?: string | null
+          ends_at?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -91,8 +184,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      close_past_days: { Args: never; Returns: number }
       current_local_date: { Args: never; Returns: string }
       reorder_tasks: { Args: { task_ids: string[] }; Returns: undefined }
+      save_day_review: {
+        Args: {
+          p_date: string
+          p_energy: number
+          p_mood: number
+          p_reflection: string
+          p_wins: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

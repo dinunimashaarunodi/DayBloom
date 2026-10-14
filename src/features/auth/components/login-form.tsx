@@ -5,6 +5,7 @@ import { useActionState } from "react"
 
 import { FormField } from "@/components/form/form-field"
 import { FormMessage } from "@/components/form/form-message"
+import { PasswordField } from "@/components/form/password-field"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { idleState } from "@/lib/action-state"
@@ -38,10 +39,9 @@ export function LoginForm({
         defaultValue={state.values?.email}
         errors={state.fieldErrors?.email}
       />
-      <FormField
+      <PasswordField
         name="password"
         label="Password"
-        type="password"
         autoComplete="current-password"
         required
         errors={state.fieldErrors?.password}

@@ -4,6 +4,7 @@ import { useActionState } from "react"
 
 import { FormField } from "@/components/form/form-field"
 import { FormMessage } from "@/components/form/form-message"
+import { PasswordField } from "@/components/form/password-field"
 import { Button } from "@/components/ui/button"
 import { idleState } from "@/lib/action-state"
 
@@ -42,10 +43,9 @@ export function SignUpForm() {
         defaultValue={state.values?.email}
         errors={state.fieldErrors?.email}
       />
-      <FormField
+      <PasswordField
         name="password"
         label="Password"
-        type="password"
         autoComplete="new-password"
         required
         hint="At least 8 characters, with letters and numbers."

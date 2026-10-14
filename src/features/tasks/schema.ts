@@ -43,3 +43,7 @@ export type TaskView = (typeof TASK_VIEWS)[number]
 export function parseTaskView(value: unknown): TaskView {
   return TASK_VIEWS.includes(value as TaskView) ? (value as TaskView) : "today"
 }
+
+/** Choices offered for an unfinished task from an earlier day. */
+export const TASK_DECISIONS = ["today", "date", "letGo"] as const
+export type TaskDecision = (typeof TASK_DECISIONS)[number]

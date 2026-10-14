@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { PageHeader } from "@/components/layout/page-header"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 import {
   Card,
   CardContent,
@@ -35,6 +36,20 @@ export default function SettingsPage() {
             <Suspense fallback={<Skeleton className="h-40" />}>
               <ProfileSection />
             </Suspense>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>Appearance</h2>
+            </CardTitle>
+            <CardDescription>
+              Choose light or dark, or follow your device. Saved on this device.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ThemeSwitcher variant="full" />
           </CardContent>
         </Card>
 

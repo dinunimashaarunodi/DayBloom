@@ -131,29 +131,75 @@ export function todayIn(tz: string, now: Date): LocalDate {
  * (e.g. 01:00).
  */
 export function startOfLocalDay(date: LocalDate, tz: string): Date {
-  const midnight = toUtcMidnight(date) // local 00:00 written as if it were UTC
+  return new Date(wallToInstant(toUtcMidnight(date), tz))
+}
+
+/**
+ * The instant at which the clock in `tz` shows `wall` (a wall-clock reading
+ * written as if it were UTC).
+ * - Repeated times (clocks went back): the earlier occurrence.
+ * - Skipped times (clocks jumped forward): the moment of the jump, e.g. a
+ *   02:30 that never happened becomes the instant clocks showed 03:00.
+ */
+function wallToInstant(wall: number, tz: string): number {
   const offsetAt = (ms: number) => wallClock(ms, tz) - ms
 
-  // Local midnight is midnight minus the UTC offset in force at that moment.
-  // Try the offsets from a day before and a day after, which covers any
-  // daylight-saving change near midnight. If both are valid (the hour repeats),
-  // the earlier one is the start of the day.
+  // The answer is wall minus the UTC offset in force at that moment. Try the
+  // offsets from a day before and a day after, which covers any daylight-saving
+  // change nearby. If both are valid (the hour repeats), take the earlier.
   const candidates = [
-    midnight - offsetAt(midnight - MS_PER_DAY),
-    midnight - offsetAt(midnight + MS_PER_DAY),
-  ].filter((ms) => wallClock(ms, tz) === midnight)
-  if (candidates.length > 0) return new Date(Math.min(...candidates))
+    wall - offsetAt(wall - MS_PER_DAY),
+    wall - offsetAt(wall + MS_PER_DAY),
+  ].filter((ms) => wallClock(ms, tz) === wall)
+  if (candidates.length > 0) return Math.min(...candidates)
 
-  // Midnight doesn't exist (clocks jumped over it). Find the first instant whose
-  // wall clock is on or after midnight. UTC offsets are within -12h…+14h.
-  let before = midnight - 15 * 3_600_000 // definitely the previous local day
-  let after = midnight + 13 * 3_600_000 // definitely this local day or later
+  // The time doesn't exist. Find the first instant whose wall clock is on or
+  // after it. UTC offsets are within -12h…+14h.
+  let before = wall - 15 * 3_600_000 // definitely earlier on the wall clock
+  let after = wall + 13 * 3_600_000 // definitely later on the wall clock
   while (after - before > 1) {
     const mid = Math.floor((before + after) / 2)
-    if (wallClock(mid, tz) >= midnight) after = mid
+    if (wallClock(mid, tz) >= wall) after = mid
     else before = mid
   }
-  return new Date(after)
+  return after
+}
+
+// ---------------------------------------------------------------------------
+// Local times of day ("HH:MM", 24-hour, as <input type="time"> submits)
+// ---------------------------------------------------------------------------
+
+export type LocalTime = string & { readonly __brand: "LocalTime" }
+
+const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/
+
+export function isLocalTime(value: unknown): value is LocalTime {
+  return typeof value === "string" && TIME_PATTERN.test(value)
+}
+
+export const localTimeSchema = z
+  .string()
+  .refine(isLocalTime, "Choose a valid time.")
+  .transform((value) => value as LocalTime)
+
+/** The instant when the clock in `tz` shows `time` on `date` (see wallToInstant for DST gaps). */
+export function localDateTimeToInstant(
+  date: LocalDate,
+  time: LocalTime,
+  tz: string,
+): Date {
+  const [, h, m] = TIME_PATTERN.exec(time)!
+  const wall = toUtcMidnight(date) + (Number(h) * 60 + Number(m)) * 60_000
+  return new Date(wallToInstant(wall, tz))
+}
+
+/** The clock time ("HH:MM") in `tz` at `instant`. */
+export function toLocalTime(instant: Date, tz: string): LocalTime {
+  const minutes = Math.floor(
+    (wallClock(instant.getTime(), tz) % MS_PER_DAY) / 60_000,
+  )
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}` as LocalTime
 }
 
 /**
@@ -197,6 +243,51 @@ export function isBeforeDay(a: LocalDate, b: LocalDate): boolean {
   return a < b
 }
 
+/** Day of the month, 1–31. */
+export function dayOfMonth(date: LocalDate): number {
+  return parts(date).day
+}
+
+/** 0 = Monday … 6 = Sunday (ISO order). */
+export function dayOfWeek(date: LocalDate): number {
+  return (new Date(toUtcMidnight(date)).getUTCDay() + 6) % 7
+}
+
+/** The Monday on or before `date`. Weeks start on Monday. */
+export function startOfWeek(date: LocalDate): LocalDate {
+  return addDays(date, -dayOfWeek(date))
+}
+
+export function startOfMonth(date: LocalDate): LocalDate {
+  return fromParts({ ...parts(date), day: 1 })
+}
+
+/** Same day `amount` months later, clamped to the month's end (31 Jan + 1 → 28/29 Feb). */
+export function addMonths(date: LocalDate, amount: number): LocalDate {
+  if (!Number.isInteger(amount))
+    throw new RangeError("amount must be a whole number of months")
+  const { year, month, day } = parts(date)
+  const index = year * 12 + (month - 1) + amount
+  const target = { year: Math.floor(index / 12), month: (index % 12) + 1 }
+  const lastDay = new Date(Date.UTC(target.year, target.month, 0)).getUTCDate()
+  return fromParts({ ...target, day: Math.min(day, lastDay) })
+}
+
+export function isSameMonth(a: LocalDate, b: LocalDate): boolean {
+  return a.slice(0, 7) === b.slice(0, 7)
+}
+
+/** Full Monday-to-Sunday weeks covering the month that contains `date` (4–6 rows). */
+export function monthGrid(date: LocalDate): LocalDate[][] {
+  const first = startOfMonth(date)
+  const nextMonth = addMonths(first, 1)
+  const weeks: LocalDate[][] = []
+  for (let day = startOfWeek(first); day < nextMonth; day = addDays(day, 7)) {
+    weeks.push(Array.from({ length: 7 }, (_, i) => addDays(day, i)))
+  }
+  return weeks
+}
+
 // ---------------------------------------------------------------------------
 // Display
 // ---------------------------------------------------------------------------
@@ -208,6 +299,12 @@ const FORMATS = {
   short: { weekday: "short", day: "numeric", month: "short" },
   /** "12 October 2026" */
   full: { day: "numeric", month: "long", year: "numeric" },
+  /** "Monday 12 October 2026" */
+  longYear: { weekday: "long", day: "numeric", month: "long", year: "numeric" },
+  /** "October 2026" */
+  month: { month: "long", year: "numeric" },
+  /** "Mon" */
+  weekday: { weekday: "short" },
 } satisfies Record<string, Intl.DateTimeFormatOptions>
 
 /** Formats a calendar day for display. No timezone shift can occur. */
