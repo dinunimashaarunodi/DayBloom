@@ -54,3 +54,12 @@ export function parseMonth(value: unknown): LocalDate | null {
   const first = `${value}-01`
   return isLocalDate(first) ? first : null
 }
+
+/** Budget row form. An empty amount removes the budget. */
+export const budgetFormSchema = z.object({
+  categoryId: z
+    .union([z.literal(""), z.uuid()])
+    .optional()
+    .transform((value) => value || null),
+  amount: z.string(),
+})

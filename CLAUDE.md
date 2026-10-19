@@ -22,7 +22,7 @@ Anyone can sign up, and each user sees only their own data.
 | 4     | Calendar (month/week, one-off events)                                                                | ✅     |
 | 5     | Day close, review, "Needs a decision" flow, history                                                  | ✅     |
 | 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts)                                  | ✅     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                         | ✅     |
 | 8+    | Habits → Journal → Focus timer → Workouts → Goals → Languages → Achievements → PWA and notifications |        |
 
 Postponed until the MVP is stable: recurrence, Google Calendar sync, Web Push, offline writes,
@@ -121,6 +121,10 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - The `transactions_before_write` trigger copies the currency onto each transaction, so clients never write it.
   - Analytics only sum transactions in the user's current currency.
   - Categories are archived, never deleted; transactions are soft-deleted.
+  - **Budgets** are effective-dated: a `budgets` row applies from `starts_on` (a month start) until a later row for the same scope replaces it.
+    - The scope is an expense category, or overall when `category_id` is null. A null amount means removed.
+    - `set_budget()` upserts. Never rewrite past months; resolve with `effectiveBudgets()` in `features/finance/budgets.ts`.
+    - A budget is "near" at 80% or more, then "over". The UI always states left/over in words, with an icon.
 - Timers store `started_at` in the database and compute elapsed time. They never count ticks in the browser.
 
 ## Database and Supabase security rules

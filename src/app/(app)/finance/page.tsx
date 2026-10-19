@@ -1,4 +1,11 @@
-import { BarChart3, CalendarDays, Plus, Tags, Wallet } from "lucide-react"
+import {
+  BarChart3,
+  CalendarDays,
+  Plus,
+  Tags,
+  Target,
+  Wallet,
+} from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -10,6 +17,7 @@ import { Section } from "@/components/layout/section"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createTransaction } from "@/features/finance/actions"
+import { BudgetsCard } from "@/features/finance/components/budgets-card"
 import { CategoryChart, DailyChart } from "@/features/finance/components/charts"
 import { CurrencySetup } from "@/features/finance/components/currency-setup"
 import { FinanceStats } from "@/features/finance/components/finance-stats"
@@ -24,6 +32,7 @@ import {
 } from "@/features/finance/logic"
 import {
   getCategories,
+  getBudgetRows,
   getFinanceSettings,
   getMonthTransactions,
 } from "@/features/finance/queries"
@@ -78,10 +87,11 @@ async function FinanceContent({
 
   const thisMonth = startOfMonth(today)
   const month = parseMonth(params.month) ?? thisMonth
-  const [transactions, previous, categories] = await Promise.all([
+  const [transactions, previous, categories, budgetRows] = await Promise.all([
     getMonthTransactions(month, currency),
     getMonthTransactions(addMonths(month, -1), currency),
     getCategories(),
+    getBudgetRows(),
   ])
   const summary = monthSummary(transactions)
   const byCategory = spendingByCategory(transactions, categories)
@@ -105,6 +115,13 @@ async function FinanceContent({
               <Tags aria-hidden="true" />
               Categories
             </Link>
+            <Link
+              href="/finance/budgets"
+              className={cn(buttonVariants({ variant: "ghost" }), "h-9 px-3")}
+            >
+              <Target aria-hidden="true" />
+              Budgets
+            </Link>
           </>
         }
       />
@@ -118,7 +135,7 @@ async function FinanceContent({
         />
 
         <div className="grid gap-6 md:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <aside className="order-first lg:order-last">
+          <aside className="order-first grid content-start gap-6 lg:order-last">
             <DashboardCard title="Add transaction" icon={Plus} accent="peach">
               <TransactionForm
                 // A fresh form per month keeps the default date right.
@@ -136,6 +153,15 @@ async function FinanceContent({
                 }}
               />
             </DashboardCard>
+            <BudgetsCard
+              rows={budgetRows}
+              transactions={transactions}
+              categories={categories}
+              currency={currency}
+              month={month}
+              monthEnd={to}
+              today={today}
+            />
           </aside>
 
           <div className="grid content-start gap-6">

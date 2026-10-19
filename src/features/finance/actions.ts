@@ -9,11 +9,14 @@ import {
   validationError,
 } from "@/lib/action-state"
 import { getCurrentUser } from "@/lib/auth/session"
+import { startOfMonth } from "@/lib/dates/local-date"
 import { parseAmount } from "@/lib/money"
 import { createClient } from "@/lib/supabase/server"
+import type { Database } from "@/types/database"
 
 import { getFinanceSettings } from "./queries"
 import {
+  budgetFormSchema,
   categoryFormSchema,
   currencySchema,
   financeIdSchema,
@@ -211,4 +214,55 @@ export async function setCategoryArchived(
   }
   revalidateFinance()
   return {}
+}
+
+// Generated types mark SQL args non-null; null category = overall budget and
+// null amount = remove the budget.
+type SetBudgetArgs = Database["public"]["Functions"]["set_budget"]["Args"]
+
+/**
+ * Sets a budget from the current month onwards (past months keep theirs).
+ * An empty amount removes the budget from this month on.
+ */
+export async function setBudget(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await getCurrentUser()
+  const values = formValues(formData, ["categoryId", "amount"])
+  const parsed = budgetFormSchema.safeParse(values)
+  if (!parsed.success) return validationError(parsed.error, values)
+
+  const { currency, today } = await getFinanceSettings()
+  if (!currency) {
+    return { status: "error", message: "Choose your currency first.", values }
+  }
+
+  let amountMinor: number | null = null
+  if (parsed.data.amount.trim() !== "") {
+    const amount = parseAmount(parsed.data.amount, currency)
+    if (!amount.ok) {
+      return {
+        status: "error",
+        fieldErrors: { amount: [amount.error] },
+        values,
+      }
+    }
+    amountMinor = amount.minor
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("set_budget", {
+    p_category_id: parsed.data.categoryId,
+    p_starts_on: startOfMonth(today),
+    p_amount_minor: amountMinor,
+  } as unknown as SetBudgetArgs)
+  if (error) return { status: "error", message: SAVE_ERROR, values }
+
+  revalidateFinance()
+  return {
+    status: "success",
+    message: amountMinor === null ? "Removed." : "Saved.",
+    values,
+  }
 }

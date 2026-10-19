@@ -167,3 +167,62 @@ test("add and archive categories", async ({ page }) => {
       .locator("option", { hasText: "Pets" }),
   ).toHaveCount(0)
 })
+
+test("set budgets and watch spending pace against them", async ({ page }) => {
+  await setUpFinance(page)
+  await page.getByRole("link", { name: "Budgets" }).first().click()
+  await expect(
+    page.getByRole("heading", { name: "Budgets", level: 1 }),
+  ).toBeVisible()
+
+  const setBudget = async (label: string, amount: string) => {
+    await page.getByRole("textbox", { name: label }).fill(amount)
+    await page.getByRole("button", { name: `Save ${label} budget` }).click()
+  }
+  await setBudget("All spending", "20000")
+  await expect(page.getByText("Saved.")).toHaveCount(1)
+  await setBudget("Food & groceries", "5000")
+  await expect(page.getByText("Saved.")).toHaveCount(2)
+
+  await page.goto("/finance")
+  await addTransaction(page, {
+    kind: "Expense",
+    amount: "4500",
+    category: "Food & groceries",
+  })
+
+  const budgets = page.getByRole("region", { name: "Budgets" })
+  const food = budgets.getByRole("progressbar", {
+    name: "Food & groceries budget",
+  })
+  await expect(food).toHaveAttribute("aria-valuenow", "90")
+  await expect(budgets).toContainText(`Rs${NBSP}500.00 left`)
+  await expect(
+    budgets.getByRole("progressbar", { name: "Overall budget" }),
+  ).toHaveAttribute(
+    "aria-valuetext",
+    `Rs${NBSP}4,500.00 of Rs${NBSP}20,000.00 used`,
+  )
+
+  // Going over is stated in words, not just colour.
+  await addTransaction(page, {
+    kind: "Expense",
+    amount: "1000",
+    category: "Food & groceries",
+  })
+  await expect(budgets).toContainText(`Rs${NBSP}500.00 over`)
+
+  await page.goto("/today")
+  await expect(page.getByRole("region", { name: "Spending" })).toContainText(
+    "28% of the monthly budget used",
+  )
+
+  // Removing a budget: clear the amount and save.
+  await page.goto("/finance/budgets")
+  await setBudget("Food & groceries", "")
+  await expect(page.getByText("Removed.")).toBeVisible()
+  await page.goto("/finance")
+  await expect(
+    page.getByRole("progressbar", { name: "Food & groceries budget" }),
+  ).toHaveCount(0)
+})

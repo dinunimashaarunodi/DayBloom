@@ -5,8 +5,13 @@ import { DashboardCard } from "@/components/layout/dashboard-card"
 import { startOfMonth } from "@/lib/dates/local-date"
 import { formatMoney } from "@/lib/money"
 
+import { budgetStatus, effectiveBudgets, OVERALL } from "../budgets"
 import { sumByKind } from "../logic"
-import { getFinanceSettings, getMonthTransactions } from "../queries"
+import {
+  getBudgetRows,
+  getFinanceSettings,
+  getMonthTransactions,
+} from "../queries"
 
 /** Today's dashboard card: real spending today and this month. */
 export async function SpendingCard() {
@@ -28,7 +33,17 @@ export async function SpendingCard() {
     )
   }
 
-  const month = await getMonthTransactions(startOfMonth(today), currency)
+  const monthStart = startOfMonth(today)
+  const [month, budgetRows] = await Promise.all([
+    getMonthTransactions(monthStart, currency),
+    getBudgetRows(),
+  ])
+  const spentThisMonth = sumByKind(month, "expense")
+  const overall = effectiveBudgets(budgetRows, monthStart, currency).get(
+    OVERALL,
+  )
+  const budget =
+    overall === undefined ? null : budgetStatus(spentThisMonth, overall)
   const spentToday = sumByKind(
     month.filter((t) => t.occurred_on === today),
     "expense",
@@ -55,8 +70,15 @@ export async function SpendingCard() {
         <span className="text-sm text-muted-foreground">today</span>
       </p>
       <p className="text-sm text-muted-foreground tabular-nums">
-        {formatMoney(sumByKind(month, "expense"), currency)} this month
+        {formatMoney(spentThisMonth, currency)} this month
       </p>
+      {budget && (
+        <p className="text-sm text-muted-foreground tabular-nums">
+          {budget.state === "over"
+            ? `${formatMoney(-budget.remaining, currency)} over the monthly budget`
+            : `${Math.round(budget.ratio * 100)}% of the monthly budget used`}
+        </p>
+      )}
     </DashboardCard>
   )
 }

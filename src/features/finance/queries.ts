@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/session"
 import { todayIn, type LocalDate } from "@/lib/dates/local-date"
 import { createClient } from "@/lib/supabase/server"
 
+import { BUDGET_COLUMNS, type BudgetRow } from "./budgets"
 import {
   CATEGORY_COLUMNS,
   monthRange,
@@ -86,3 +87,15 @@ export async function getTransaction(id: string): Promise<Transaction | null> {
   if (error) failed()
   return data as Transaction | null
 }
+
+/** Every budget row the user has (small: one per scope per changed month). */
+export const getBudgetRows = cache(async (): Promise<BudgetRow[]> => {
+  const user = await getCurrentUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("budgets")
+    .select(BUDGET_COLUMNS)
+    .eq("user_id", user.id)
+  if (error) failed()
+  return data as BudgetRow[]
+})

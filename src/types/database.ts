@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      budgets: {
+        Row: {
+          amount_minor: number | null
+          category_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          starts_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_minor?: number | null
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          starts_on: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount_minor?: number | null
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          starts_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_fkey"
+            columns: ["category_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       days: {
         Row: {
           closed_at: string | null
@@ -279,6 +320,14 @@ export type Database = {
           p_mood: number
           p_reflection: string
           p_wins: string
+        }
+        Returns: undefined
+      }
+      set_budget: {
+        Args: {
+          p_amount_minor: number
+          p_category_id: string
+          p_starts_on: string
         }
         Returns: undefined
       }
