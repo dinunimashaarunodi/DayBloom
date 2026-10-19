@@ -5,19 +5,25 @@ Anyone can sign up, and each user sees only their own data.
 
 ## Current phase
 
-**Phase 5 is built and all automated checks pass. Waiting for the user's approval.** Phase 1 still needs a manual check with a real email signup.
-Next up: Phase 6. Update this line whenever a phase is completed and verified.
+**Phase 6 is in progress.**
 
-| Phase | Scope                                                                                                          | Status |
-| ----- | -------------------------------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                                       | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                       | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                                       | ✅     |
-| 3     | Tasks and Today page                                                                                           | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                                          | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                                            | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                          |        |
-| 7+    | Habits → Journal → Focus timer → Finance → Workouts → Goals → Languages → Achievements → PWA and notifications |        |
+- Done: account deletion, privacy page, security headers, deleted-account sign-out, and deployment prep (`vercel.json`, `docs/deployment.md`).
+- Production Supabase `daybloom-prod` (ref `qgzofjctcvtkpxwvzspc`, Mumbai) is created and has all migrations.
+- Waiting on: the Vercel import (the user has a GitHub-linked account), prod auth URLs once the domain is known, and Resend SMTP (needs a verified domain).
+
+**Phase 7 (Finance) is built and all automated checks pass. Waiting for the user's approval.** The user asked for it ahead of Habits. Update this line whenever a phase is completed and verified.
+
+| Phase | Scope                                                                                                | Status |
+| ----- | ---------------------------------------------------------------------------------------------------- | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                             | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                             | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                             | ✅     |
+| 3     | Tasks and Today page                                                                                 | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                                | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                                  | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts)                                  | ✅     |
+| 8+    | Habits → Journal → Focus timer → Workouts → Goals → Languages → Achievements → PWA and notifications |        |
 
 Postponed until the MVP is stable: recurrence, Google Calendar sync, Web Push, offline writes,
 spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calendar editing.
@@ -26,7 +32,9 @@ spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calend
 
 - **Next.js 16 (App Router) with TypeScript (strict)**, Tailwind CSS, shadcn/ui, Recharts (from the finance phase onward).
 - **Supabase:** PostgreSQL, Auth (via `@supabase/ssr` cookies) and `pg_cron`.
-  - One hosted project for dev (`daybloom-dev`, ref `dltckblhqkhdxbfeuflx`, Mumbai) and a separate one for prod.
+  - Dev: `daybloom-dev` (ref `dltckblhqkhdxbfeuflx`, Mumbai). The CLI stays linked to dev.
+  - Prod: `daybloom-prod` (ref `qgzofjctcvtkpxwvzspc`, Mumbai). Its DB password is `SUPABASE_PROD_DB_PASSWORD` in `.env.local`.
+  - To migrate prod: link prod, `db push`, run the advisors, then relink dev (see `docs/deployment.md`).
   - No local Docker stack.
 - **Libraries:** Zod for validation. Dates use the built-in `Intl` API via `src/lib/dates`, with no date library.
   - `@date-fns/tz` 1.5.0 was dropped: it returned wrong day boundaries when the machine's own timezone changed DST on the same day.
@@ -44,12 +52,14 @@ spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calend
 ```
 src/app/(auth)/...         login, signup, password reset
 src/app/(app)/...          authenticated pages (today, tasks, calendar, history, settings)
+src/app/privacy/           public privacy notice (keep it in sync with what the app stores)
 src/features/<domain>/     queries.ts, actions.ts, schema.ts, components/
 src/components/ui/         shadcn components (generated, minimal edits)
 src/components/layout/     app shell, navigation
 src/lib/supabase/          server.ts, proxy.ts (add client.ts only when a client component needs Supabase)
 src/lib/auth/              routes.ts (access rules), session.ts (getCurrentUser: the data access layer)
 src/lib/dates/             the ONLY place for timezone/day logic (local-date.ts: days; timezone.ts: zones)
+src/lib/money.ts           the ONLY place for money parsing/formatting (integer minor units)
 src/types/database.ts      generated, never hand-edited
 src/proxy.ts               session refresh and route guard
 supabase/migrations/       all schema changes
@@ -103,6 +113,14 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - Timed events store instants (`starts_at`, `ends_at`), so their local day follows the user's timezone.
   - All-day events store calendar days (`start_date`..`end_date`, inclusive) and never shift.
   - The form only creates same-day timed events, but the logic handles events that cross midnight.
+- **Money** (`src/lib/money.ts`, the only place for money logic):
+  - Amounts are integer minor units (`amount_minor bigint`).
+  - `parseAmount` uses string arithmetic; commas are thousands separators and a dot is the decimal point.
+  - Use `formatMoney` and `currencyDigits` for display and decimal places.
+  - Each user has one currency (`profiles.currency`, set once in finance setup).
+  - The `transactions_before_write` trigger copies the currency onto each transaction, so clients never write it.
+  - Analytics only sum transactions in the user's current currency.
+  - Categories are archived, never deleted; transactions are soft-deleted.
 - Timers store `started_at` in the database and compute elapsed time. They never count ticks in the browser.
 
 ## Database and Supabase security rules
@@ -123,7 +141,8 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 - Revoke `execute` on trigger and helper functions from `public, anon, authenticated` so they aren't exposed through RPC.
 - Internal functions go in the `private` schema, which the Data API doesn't expose.
 - After a migration, run `npx supabase db advisors --linked`.
-  - The only accepted warning is `close_past_days()` (an intentional, `auth.uid()`-checked SECURITY DEFINER function).
+  - Accepted warnings: `close_past_days()` and `delete_my_account()`. Both are intentional SECURITY DEFINER functions that only act on `auth.uid()`.
+  - Also flagged: leaked password protection (paid plan). It's on the launch checklist.
 - Authorize on the server with `supabase.auth.getUser()` or `getClaims()`, never `getSession()`.
 - Secrets:
   - The secret (service-role) key is server-only and may never appear in `NEXT_PUBLIC_*` variables or client code.
@@ -132,6 +151,14 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 - Supabase Auth config lives in `supabase/config.toml` and is applied with `npx supabase config push`.
   - Preview first, answering `n` to every prompt. Push only the service you changed, and never let it downgrade remote settings (OTP length, MFA, storage).
   - The free tier rejects custom email templates until custom SMTP is configured (Phase 6).
+- **Account deletion:** `delete_my_account()` deletes the caller from `auth.users`, and every table cascades.
+  - New tables must reference `auth.users ... on delete cascade` so deletion stays complete.
+  - If a login points at a deleted account, `getProfile()` redirects to `/auth/signout`. That route signs out only if the profile is really gone.
+- **Security headers** (`next.config.ts`): framing, base, form and object CSP, HSTS, `nosniff`, referrer and permissions policies.
+  - A script CSP is deliberately off: nonces would force dynamic rendering.
+- **Deployment:** see `docs/deployment.md`.
+  - Prod is its own Supabase project, with auth URLs set in its dashboard (never `config push` to prod).
+  - Vercel gets only the two `NEXT_PUBLIC_*` variables.
 - Auth emails (signup confirmation, password reset) are sent with `createEmailLinkClient()` (implicit flow) and return to `/auth/callback`.
   - That page reads the one-time session from the URL fragment in the browser, so links work on any device.
   - Default PKCE links only work in the browser that requested them, which broke real users.
@@ -172,6 +199,10 @@ Calm, premium and nature-inspired, never a generic admin dashboard. Tokens live 
   - Mobile has a top bar and bottom tabs, single-column grids that widen at `sm`/`lg`, and touch targets of 36–40px or more.
 - **Dashboard (Today):** show only real data.
   - Add each module's card (study time, expenses, habits, goals, achievements) when that module is built. Never add placeholder statistics.
+- **Charts** (Recharts):
+  - Follow the dataviz skill: one series per chart (no legend), bars at most 24px with 4px rounded data-ends, hairline solid gridlines.
+  - Text uses text tokens, every bar gets a hover tooltip, and each chart has an `sr-only` table of its data.
+  - Expense bars use `--chart-expense`, validated with the dataviz script for both themes. Validate any new chart colour the same way.
 - **Typography:** Geist. Page titles are `text-2xl md:text-3xl font-semibold`; section titles are `font-medium`.
 - **Motion:**
   - Short and subtle: 200–500ms fades and zooms via `tw-animate-css`, small celebrations when finishing tasks.
@@ -224,7 +255,10 @@ If PowerShell blocks npm with "running scripts is disabled", run:
    - Logic, especially dates and money, gets unit tests.
    - Every new table gets an RLS test proving that user B can't access user A's rows.
    - Each user flow gets one end-to-end happy path.
-   - E2E tests share Supabase's sign-in rate limit (about 30 per 5 minutes per IP). Seed and poll data with `adminClient()`, not extra sign-ins.
+   - All tests share Supabase's per-IP sign-in rate limit (about 30–45 per 5 minutes in practice). The `sign_in_sign_ups` setting and the secret key don't lift it.
+     - Seed and poll data with `adminClient()`, not extra sign-ins.
+     - `signedInClient()` reuses one session per user and waits out a rate limit instead of failing.
+     - A sudden wave of `fetch failed` errors at test setup means the network dropped. Check connectivity, then rerun.
    - In E2E tests, prefer `getByRole` selectors. Cache Components keeps visited pages in the DOM, hidden, and `getByLabel`/`getByText` can match those hidden copies.
    - Any client component that uses `usePathname`, `useSearchParams` or similar URL hooks must render inside `<Suspense>`.
    - Client controls that call server actions (checkboxes, buttons) must be disabled while their transition is pending.

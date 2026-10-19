@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { eventTimeLabel } from "@/features/calendar/logic"
 import { getEvents } from "@/features/calendar/queries"
 import { ReviewForm } from "@/features/days/components/review-form"
+import { SpendingCard } from "@/features/finance/components/spending-card"
 import { ensurePastDaysClosed, getDay } from "@/features/days/queries"
 import { getProfile } from "@/features/profile/queries"
 import { DailyProgress } from "@/features/tasks/components/daily-progress"
@@ -84,8 +85,12 @@ async function TodayDashboard() {
   return (
     <div className="grid gap-6 md:gap-8">
       {/* At a glance: real numbers only. */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <DailyProgress done={done.length} remaining={planned.length} />
+
+        <Suspense fallback={<Skeleton className="h-28 rounded-xl" />}>
+          <SpendingCard />
+        </Suspense>
 
         <DashboardCard title="Up next" icon={Clock} accent="sage">
           {nextEvent ? (
@@ -240,7 +245,8 @@ function HeaderSkeleton() {
 function DashboardSkeleton() {
   return (
     <div className="grid gap-6" aria-hidden="true">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-28 rounded-xl" />

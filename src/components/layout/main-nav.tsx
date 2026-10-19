@@ -6,6 +6,7 @@ import {
   ListChecks,
   Settings,
   Sun,
+  Wallet,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -17,6 +18,7 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/today", label: "Today", icon: Sun },
   { href: "/tasks", label: "Tasks", icon: ListChecks },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/finance", label: "Finance", icon: Wallet },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
@@ -41,7 +43,7 @@ export function MainNavLinks({
 }) {
   return (
     <ul
-      className={cn(variant === "sidebar" ? "grid gap-1" : "grid grid-cols-5")}
+      className={cn(variant === "sidebar" ? "grid gap-1" : "grid grid-cols-6")}
     >
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active =

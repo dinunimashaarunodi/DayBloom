@@ -29,4 +29,6 @@ export const LOGIN_NOTICES: Record<string, string> = {
   "link-invalid":
     "That link has expired or was opened in a different browser. If you were confirming your email, it may already be confirmed, so try logging in. Otherwise, request a new link.",
   "signed-out": "You've been signed out. See you soon!",
+  "account-deleted":
+    "Your account and all of its data have been deleted. Thank you for blooming with us. 🌱",
 }

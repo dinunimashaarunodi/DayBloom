@@ -48,3 +48,15 @@ export const resetPasswordSchema = z
     message: "Passwords don't match.",
     path: ["confirmPassword"],
   })
+
+/** Typing the word makes deleting an account a deliberate act. */
+export const DELETE_CONFIRMATION = "DELETE"
+
+export const deleteAccountSchema = z.object({
+  confirmation: z
+    .string()
+    .trim()
+    .refine((value) => value === DELETE_CONFIRMATION, {
+      message: `Type ${DELETE_CONFIRMATION} to confirm.`,
+    }),
+})

@@ -52,15 +52,41 @@ export async function deleteTestUser(
   if (user) await adminClient().auth.admin.deleteUser(user.id)
 }
 
+// Supabase limits password sign-ins per network address (roughly 30 per
+// 5 minutes in practice), shared by every test run on this machine.
+// So: reuse a user's session within a run, and wait instead of failing when
+// the limit is hit.
+const sessions = new Map<string, Promise<SupabaseClient<Database>>>()
+const RETRY_EVERY_MS = 20_000
+const MAX_WAIT_MS = 6 * 60_000
+
+function isRateLimited(error: { status?: number; code?: string }) {
+  return error.status === 429 || error.code === "over_request_rate_limit"
+}
+
+async function signIn(user: TestUser): Promise<SupabaseClient<Database>> {
+  const deadline = Date.now() + MAX_WAIT_MS
+  for (;;) {
+    const client = anonClient()
+    const { error } = await client.auth.signInWithPassword({
+      email: user.email,
+      password: user.password,
+    })
+    if (!error) return client
+    if (!isRateLimited(error) || Date.now() > deadline) throw error
+    await new Promise((resolve) => setTimeout(resolve, RETRY_EVERY_MS))
+  }
+}
+
 /** A client signed in as `user`, so every query runs under RLS as that user. */
-export async function signedInClient(
+export function signedInClient(
   user: TestUser,
 ): Promise<SupabaseClient<Database>> {
-  const client = anonClient()
-  const { error } = await client.auth.signInWithPassword({
-    email: user.email,
-    password: user.password,
-  })
-  if (error) throw error
-  return client
+  let session = sessions.get(user.id)
+  if (!session) {
+    session = signIn(user)
+    sessions.set(user.id, session)
+    session.catch(() => sessions.delete(user.id))
+  }
+  return session
 }

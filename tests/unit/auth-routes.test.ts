@@ -43,6 +43,12 @@ describe("route access rules", () => {
   it("keeps the email-link handler public", () => {
     expect(isPublicPath("/auth/confirm")).toBe(true)
     expect(isPublicPath("/auth/callback")).toBe(true)
+    expect(isPublicPath("/auth/signout")).toBe(true)
+  })
+
+  it("lets everyone read the privacy page, signed in or not", () => {
+    expect(isPublicPath("/privacy")).toBe(true)
+    expect(isGuestOnlyPath("/privacy")).toBe(false)
   })
 
   it("protects app pages, password reset, and unknown paths", () => {

@@ -23,24 +23,26 @@ type Summary = {
 
 describe("days: closing, snapshots and reviews", () => {
   let alice: TestUser
-  let bob: TestUser
+  let bob: TestUser | undefined
   let asAlice: Client
-  let asBob: Client
   let today: LocalDate
 
   beforeEach(async () => {
     alice = await createTestUser({ timezone: TZ })
-    bob = await createTestUser({ timezone: TZ })
-    ;[asAlice, asBob] = await Promise.all([
-      signedInClient(alice),
-      signedInClient(bob),
-    ])
+    bob = undefined
+    asAlice = await signedInClient(alice)
     today = todayIn(TZ, new Date())
   })
 
   afterEach(async () => {
     await Promise.all([deleteTestUser(alice), deleteTestUser(bob)])
   })
+
+  /** A second user, only for the tests that need one (keeps sign-ins low). */
+  async function signInBob(): Promise<Client> {
+    bob = await createTestUser({ timezone: TZ })
+    return signedInClient(bob)
+  }
 
   async function closePastDays(client: Client) {
     const { data, error } = await client.rpc("close_past_days")
@@ -143,6 +145,7 @@ describe("days: closing, snapshots and reviews", () => {
     await asAlice
       .from("tasks")
       .insert({ title: "Alice's", due_date: addDays(today, -1) })
+    const asBob = await signInBob()
     expect(await closePastDays(asBob)).toBe(0)
     expect(await closePastDays(asAlice)).toBe(1)
 
@@ -214,6 +217,7 @@ describe("days: closing, snapshots and reviews", () => {
 
     it("can't touch another user's day", async () => {
       await asAlice.rpc("save_day_review", review(today))
+      const asBob = await signInBob()
       const { data } = await asBob
         .from("days")
         .update({ mood: 1 })

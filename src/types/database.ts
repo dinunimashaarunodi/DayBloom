@@ -107,9 +107,40 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_categories: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
+          currency: string | null
           display_name: string | null
           timezone: string
           updated_at: string
@@ -117,6 +148,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          currency?: string | null
           display_name?: string | null
           timezone?: string
           updated_at?: string
@@ -124,6 +156,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          currency?: string | null
           display_name?: string | null
           timezone?: string
           updated_at?: string
@@ -179,6 +212,56 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount_minor: number
+          category_id: string | null
+          created_at: string
+          currency: string
+          deleted_at: string | null
+          id: string
+          kind: string
+          note: string | null
+          occurred_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_minor: number
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          deleted_at?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          occurred_on: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount_minor?: number
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          deleted_at?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          occurred_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_category_fkey"
+            columns: ["category_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -186,6 +269,8 @@ export type Database = {
     Functions: {
       close_past_days: { Args: never; Returns: number }
       current_local_date: { Args: never; Returns: string }
+      delete_my_account: { Args: never; Returns: undefined }
+      ensure_default_finance_categories: { Args: never; Returns: undefined }
       reorder_tasks: { Args: { task_ids: string[] }; Returns: undefined }
       save_day_review: {
         Args: {

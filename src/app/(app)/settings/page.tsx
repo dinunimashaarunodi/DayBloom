@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { Suspense } from "react"
 
 import { PageHeader } from "@/components/layout/page-header"
@@ -11,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DeleteAccountForm } from "@/features/auth/components/delete-account-form"
 import { SignOutButton } from "@/features/auth/components/sign-out-button"
 import { ProfileForm } from "@/features/profile/components/profile-form"
 import { getProfile } from "@/features/profile/queries"
@@ -62,8 +64,29 @@ export default function SettingsPage() {
               <AccountEmail />
             </Suspense>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-wrap items-center justify-between gap-2">
             <SignOutButton className="-ml-3 w-fit" />
+            <Link
+              href="/privacy"
+              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Privacy
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle>
+              <h2>Delete account</h2>
+            </CardTitle>
+            <CardDescription>
+              Permanently deletes your account and everything in it: tasks,
+              events, history and reflections. This can&apos;t be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteAccountForm />
           </CardContent>
         </Card>
       </div>

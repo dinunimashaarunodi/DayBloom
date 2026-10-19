@@ -7,7 +7,8 @@ export const LOGIN_PATH = "/login"
 /** Pages only signed-out visitors should see. Signed-in users go to HOME_PATH. */
 const GUEST_ONLY = ["/", "/login", "/signup", "/forgot-password"]
 
-/** Reachable without a session. Everything else requires sign-in. */
+/** Reachable with or without a session. Everything else requires sign-in. */
+const PUBLIC_PATHS = ["/privacy"]
 const PUBLIC_PREFIXES = ["/auth/"]
 
 export function isGuestOnlyPath(pathname: string): boolean {
@@ -17,6 +18,7 @@ export function isGuestOnlyPath(pathname: string): boolean {
 export function isPublicPath(pathname: string): boolean {
   return (
     isGuestOnlyPath(pathname) ||
+    PUBLIC_PATHS.includes(pathname) ||
     PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
   )
 }

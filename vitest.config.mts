@@ -26,8 +26,9 @@ export default defineConfig({
           environment: "node",
           include: ["tests/db/**/*.test.ts"],
           setupFiles: ["tests/load-env.ts"],
-          testTimeout: 30_000,
-          hookTimeout: 60_000,
+          // Long enough to wait out Supabase's sign-in rate limit (see tests/support).
+          testTimeout: 7 * 60_000,
+          hookTimeout: 7 * 60_000,
         },
       },
     ],

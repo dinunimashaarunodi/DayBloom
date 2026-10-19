@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/server"
 
 import { friendlyAuthError } from "./errors"
 import {
+  deleteAccountSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   signInSchema,
@@ -127,4 +128,30 @@ export async function signOut(): Promise<void> {
   // "local" signs out this device only; other devices stay signed in.
   await supabase.auth.signOut({ scope: "local" })
   redirect(`${LOGIN_PATH}?notice=signed-out`)
+}
+
+/**
+ * Permanently deletes the signed-in user and all of their data
+ * (delete_my_account() in Postgres), then signs this device out.
+ */
+export async function deleteAccount(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await getCurrentUser()
+  const parsed = deleteAccountSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return validationError(parsed.error)
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("delete_my_account")
+  if (error) {
+    return {
+      status: "error",
+      message: "We couldn't delete your account. Please try again.",
+    }
+  }
+
+  // The account is gone; clear this device's session cookies.
+  await supabase.auth.signOut({ scope: "local" })
+  redirect(`${LOGIN_PATH}?notice=account-deleted`)
 }
