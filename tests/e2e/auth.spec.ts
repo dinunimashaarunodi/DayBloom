@@ -68,11 +68,12 @@ test("happy path: log in, see today, update profile, sign out", async ({
   await page.goto("/login")
   await expect(page).toHaveURL(/\/today$/)
 
-  // Navigate with the visible nav (sidebar on desktop, bottom tabs on mobile).
-  await page
-    .getByRole("navigation", { name: "Main" })
-    .getByRole("link", { name: "Settings" })
-    .click()
+  // Navigate with the visible nav: the sidebar on desktop, the top bar's
+  // Settings icon on mobile (Settings isn't a bottom tab).
+  const nav = isMobile
+    ? page.getByRole("banner")
+    : page.getByRole("navigation", { name: "Main" })
+  await nav.getByRole("link", { name: "Settings" }).click()
   await expect(page).toHaveURL(/\/settings$/)
 
   await page.getByLabel("Name").fill("Ama Perera")

@@ -23,7 +23,10 @@ Server code runs in Mumbai (`bom1`, set in `vercel.json`), next to the database.
    npx supabase link --project-ref dltckblhqkhdxbfeuflx
    ```
 
-3. In the prod dashboard, under **Authentication → URL Configuration**:
+3. Set the production auth URLs. (Done for https://day-bloom-lilac.vercel.app.) Either use the dashboard
+   (**Authentication → URL Configuration**), or push a temporary copy of `supabase/config.toml` with
+   prod values: `npx supabase config push --project-ref <prod-ref> --workdir <tmp-dir>`, auth service only.
+   The values:
    - Site URL: `https://<your-domain>`
    - Redirect URLs: `https://<your-domain>/**`
 
@@ -49,6 +52,9 @@ for real users.
    `/auth/callback`) also work without them.
 
 ## 3. Vercel
+
+> Turn off **Settings → Deployment Protection → Vercel Authentication** for production,
+> otherwise every visitor is sent to a Vercel login page.
 
 1. Import the GitHub repo in Vercel (framework: Next.js; defaults are fine).
 2. Add these environment variables (Production and Preview):

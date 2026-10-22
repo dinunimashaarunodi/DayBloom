@@ -1,4 +1,4 @@
-import { CalendarDays, Sun } from "lucide-react"
+import { CalendarDays, NotebookPen, Sun } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -16,6 +16,8 @@ import { ReviewDisplay } from "@/features/days/components/review-display"
 import { ReviewForm } from "@/features/days/components/review-form"
 import { canEditReview, summaryLine } from "@/features/days/logic"
 import { ensurePastDaysClosed, getDay } from "@/features/days/queries"
+import { EntryLink } from "@/features/journal/components/entry-list"
+import { getEntriesOn } from "@/features/journal/queries"
 import { getUserToday } from "@/features/tasks/queries"
 import { formatLocalDate, isLocalDate } from "@/lib/dates/local-date"
 import { cn } from "@/lib/utils"
@@ -59,16 +61,54 @@ async function DayDetail({
   }
 
   await ensurePastDaysClosed()
-  const day = await getDay(date)
+  const [day, entries] = await Promise.all([getDay(date), getEntriesOn(date)])
   const editable = canEditReview(date, today)
+
+  const journal = (
+    <Section
+      id="journal"
+      title="Journal"
+      actions={
+        <Link
+          href={`/journal/new?date=${date}`}
+          className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3")}
+        >
+          <NotebookPen aria-hidden="true" />
+          Write about this day
+        </Link>
+      }
+    >
+      {entries.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No journal entries for this day.
+        </p>
+      ) : (
+        <ul aria-label="Journal entries" className="grid gap-2">
+          {entries.map((entry) => (
+            <li key={entry.id}>
+              <EntryLink entry={entry} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  )
 
   if (!day?.summary) {
     return (
       <>
         <PageHeader title={title} />
-        <EmptyState icon={CalendarDays} title="Nothing was recorded this day">
-          Days with tasks, events or a reflection appear in your history.
-        </EmptyState>
+        <div className="grid gap-8">
+          {entries.length === 0 && (
+            <EmptyState
+              icon={CalendarDays}
+              title="Nothing was recorded this day"
+            >
+              Days with tasks, events or a reflection appear in your history.
+            </EmptyState>
+          )}
+          {journal}
+        </div>
       </>
     )
   }
@@ -106,6 +146,8 @@ async function DayDetail({
             <ReviewDisplay day={day} />
           )}
         </Section>
+
+        {journal}
       </div>
     </>
   )

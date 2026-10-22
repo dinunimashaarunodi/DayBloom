@@ -57,6 +57,7 @@ test("reflect on today: the review is saved and shown again", async ({
 
 test("past days are closed into history with a frozen snapshot", async ({
   page,
+  isMobile,
 }) => {
   const today = todayIn(TZ, new Date())
   const yesterday = addDays(today, -1)
@@ -71,10 +72,17 @@ test("past days are closed into history with a frozen snapshot", async ({
     .eq("title", "Write report")
     .single()
 
-  await page
-    .getByRole("navigation", { name: "Main" })
-    .getByRole("link", { name: "History" })
-    .click()
+  // History is in the sidebar; on mobile it's listed on the More tab.
+  const nav = page.getByRole("navigation", { name: "Main" })
+  if (isMobile) {
+    await nav.getByRole("link", { name: "More" }).click()
+    await page
+      .getByRole("list", { name: "More pages" })
+      .getByRole("link", { name: /History/ })
+      .click()
+  } else {
+    await nav.getByRole("link", { name: "History" }).click()
+  }
   const pastDays = page.getByRole("list", { name: "Past days" })
   await expect(pastDays.getByRole("listitem")).toHaveText([
     new RegExp(

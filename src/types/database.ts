@@ -178,6 +178,208 @@ export type Database = {
         }
         Relationships: []
       }
+      focus_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          label: string | null
+          planned_minutes: number
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          label?: string | null
+          planned_minutes: number
+          started_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          label?: string | null
+          planned_minutes?: number
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goal_milestones: {
+        Row: {
+          created_at: string
+          done: boolean
+          done_at: string | null
+          goal_id: string
+          id: string
+          position: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          goal_id: string
+          id?: string
+          position?: number
+          title: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          goal_id?: string
+          id?: string
+          position?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_milestones_goal_fkey"
+            columns: ["goal_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          achieved_at: string | null
+          created_at: string
+          id: string
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          why: string | null
+        }
+        Insert: {
+          achieved_at?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string
+          why?: string | null
+        }
+        Update: {
+          achieved_at?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          why?: string | null
+        }
+        Relationships: []
+      }
+      habit_logs: {
+        Row: {
+          created_at: string
+          habit_id: string
+          id: string
+          local_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          id?: string
+          local_date: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          id?: string
+          local_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_fkey"
+            columns: ["habit_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          days_mask: number
+          id: string
+          name: string
+          position: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          days_mask?: number
+          id?: string
+          name: string
+          position?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          days_mask?: number
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          local_date: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          local_date: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          local_date?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -302,6 +504,45 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
         ]
+      }
+      workouts: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          effort: number | null
+          id: string
+          kind: string
+          local_date: string
+          notes: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          effort?: number | null
+          id?: string
+          kind: string
+          local_date: string
+          notes?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          effort?: number | null
+          id?: string
+          kind?: string
+          local_date?: string
+          notes?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

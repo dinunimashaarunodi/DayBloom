@@ -1,11 +1,15 @@
+import { Settings } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
 
 import { Logo } from "@/components/layout/logo"
 import { MainNav, MainNavLinks } from "@/components/layout/main-nav"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SignOutButton } from "@/features/auth/components/sign-out-button"
 import { UserSummary } from "@/features/profile/components/user-summary"
+import { cn } from "@/lib/utils"
 
 /**
  * Authenticated app shell: sidebar on desktop, top bar + bottom tabs on mobile.
@@ -40,7 +44,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur-md md:hidden">
           <Logo href="/today" />
-          <ThemeSwitcher />
+          <div className="flex items-center gap-1">
+            <ThemeSwitcher />
+            <Link
+              href="/settings"
+              aria-label="Settings"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon" }),
+                "size-9",
+              )}
+            >
+              <Settings />
+            </Link>
+          </div>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-28 md:px-10 md:py-10">
           {children}

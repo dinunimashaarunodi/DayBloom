@@ -9,21 +9,29 @@ Anyone can sign up, and each user sees only their own data.
 
 - Done: account deletion, privacy page, security headers, deleted-account sign-out, and deployment prep (`vercel.json`, `docs/deployment.md`).
 - Production Supabase `daybloom-prod` (ref `qgzofjctcvtkpxwvzspc`, Mumbai) is created and has all migrations.
-- Waiting on: the Vercel import (the user has a GitHub-linked account), prod auth URLs once the domain is known, and Resend SMTP (needs a verified domain).
+- **Live:** https://day-bloom-lilac.vercel.app (Vercel, deploys from GitHub `main`; uses `daybloom-prod`).
+  - Prod auth: Site URL is the live domain. Redirects allow it, the preview pattern `https://day-bloom-*-nimasha-arunodis-projects.vercel.app/**`, and the URLs the Vercel integration added.
+  - Prod auth was pushed from a temporary copy of `config.toml` (`config push --project-ref <prod> --workdir <tmp>`), auth service only.
+- Still waiting on: Resend SMTP (needs a verified domain).
 
-**Phase 7 (Finance) is built and all automated checks pass. Waiting for the user's approval.** The user asked for it ahead of Habits. Update this line whenever a phase is completed and verified.
+**Phase 12 (Goals) is built and all automated checks pass on dev. Waiting for the user's approval.** Five migrations are not yet in prod: habits (`20261022124056`), journal (`20261022152255`), focus (`20261022153547`), workouts (`20261022155323`) and goals (`20261022211128`). Push them before deploying this code. Next.js was upgraded to 16.4.2 for a critical advisory; deploy it soon. Update this line whenever a phase is completed and verified.
 
-| Phase | Scope                                                                                                | Status |
-| ----- | ---------------------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                             | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                             | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                             | ✅     |
-| 3     | Tasks and Today page                                                                                 | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                                | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                                  | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                         | ✅     |
-| 8+    | Habits → Journal → Focus timer → Workouts → Goals → Languages → Achievements → PWA and notifications |        |
+| Phase | Scope                                                                                   | Status |
+| ----- | --------------------------------------------------------------------------------------- | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                | ✅     |
+| 3     | Tasks and Today page                                                                    | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                   | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                     | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                   | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets            | ✅     |
+| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card               | ✅     |
+| 9     | Journal: entries per local day, search, Today card, entries on History days             | ✅     |
+| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                     | ✅     |
+| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card | ✅     |
+| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card        | ✅     |
+| 13+   | Languages → Achievements → PWA and notifications                                        |        |
 
 Postponed until the MVP is stable: recurrence, Google Calendar sync, Web Push, offline writes,
 spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calendar editing.
@@ -125,7 +133,23 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
     - The scope is an expense category, or overall when `category_id` is null. A null amount means removed.
     - `set_budget()` upserts. Never rewrite past months; resolve with `effectiveBudgets()` in `features/finance/budgets.ts`.
     - A budget is "near" at 80% or more, then "over". The UI always states left/over in words, with an icon.
+- **Habits** (`features/habits/logic.ts` holds the streak and schedule rules):
+  - `days_mask` is a 7-bit weekday schedule (bit 0 = Monday). Check-ins are `habit_logs` rows, one per habit and local day.
+  - RLS only allows adding or removing check-ins for today and the 7 days before. Archived habits can't be checked in (trigger).
+  - Today being unchecked doesn't break a streak. Unscheduled days are skipped, and a check-in on one counts as a bonus.
+  - Habits are archived, never deleted.
+- **Journal** (`features/journal`):
+  - Entries belong to a local day (`local_date`), any number per day. RLS refuses future days.
+  - Entries are hard-deleted (private writing that nothing references), an intended exception to soft deletes.
+  - Search uses `containsFilter()`, which escapes LIKE wildcards and quotes the PostgREST value. Never interpolate raw input into `.or()`.
 - Timers store `started_at` in the database and compute elapsed time. They never count ticks in the browser.
+  - Focus sessions (`focus_sessions`): triggers stamp `started_at` and `ended_at` with the database clock (clients can't set or backdate them), and cap the end at the planned end.
+  - A session nobody ends finishes at its planned end and counts in full. Starting a session closes any open one. A session counts on the local day it started.
+- **Workouts** (`features/workouts`): one row per workout on a local day (RLS refuses future days). A week streak counts weeks (Monday first) with at least one workout; an empty current week doesn't break it. Hard-deleted, like journal entries and focus sessions.
+- **Goals** (`features/goals`): status `active` | `achieved` | `archived`; never deleted (archive instead).
+  - Progress is the share of milestones done. Finishing every milestone suggests "Mark as achieved"; it never happens automatically.
+  - Triggers stamp `achieved_at` and `done_at` with the database clock and keep the first achieved moment.
+  - A passed target date is stated plainly ("Target date was …"), never as a failure.
 
 ## Database and Supabase security rules
 
@@ -200,7 +224,7 @@ Calm, premium and nature-inspired, never a generic admin dashboard. Tokens live 
   - `EmptyState` (accent, helpful copy, optional action)
 - **Layout:**
   - Desktop has a 16rem sidebar and `max-w-5xl` content.
-  - Mobile has a top bar and bottom tabs, single-column grids that widen at `sm`/`lg`, and touch targets of 36–40px or more.
+  - Mobile has a top bar (theme switcher and a Settings icon) and six bottom tabs: the five `tab: true` items in `components/layout/nav-items.ts` plus **More** (`/more`), which lists every other page. Single-column grids widen at `sm`/`lg`; touch targets are 36–40px or more.
 - **Dashboard (Today):** show only real data.
   - Add each module's card (study time, expenses, habits, goals, achievements) when that module is built. Never add placeholder statistics.
 - **Charts** (Recharts):
@@ -263,6 +287,7 @@ If PowerShell blocks npm with "running scripts is disabled", run:
      - Seed and poll data with `adminClient()`, not extra sign-ins.
      - `signedInClient()` reuses one session per user and waits out a rate limit instead of failing.
      - A sudden wave of `fetch failed` errors at test setup means the network dropped. Check connectivity, then rerun.
+   - In E2E tests, after navigating, wait for the new page's heading before filling fields: the previous page stays visible until the new one renders, and a field with the same label there gets filled instead.
    - In E2E tests, prefer `getByRole` selectors. Cache Components keeps visited pages in the DOM, hidden, and `getByLabel`/`getByText` can match those hidden copies.
    - Any client component that uses `usePathname`, `useSearchParams` or similar URL hooks must render inside `<Suspense>`.
    - Client controls that call server actions (checkboxes, buttons) must be disabled while their transition is pending.
