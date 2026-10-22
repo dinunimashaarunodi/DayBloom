@@ -17,6 +17,8 @@ import { SpendingCard } from "@/features/finance/components/spending-card"
 import { TodayFocusCard } from "@/features/focus/components/today-focus-card"
 import { TodayWorkoutsCard } from "@/features/workouts/components/today-workouts-card"
 import { TodayGoalsCard } from "@/features/goals/components/today-goals-card"
+import { TodayLanguagesCard } from "@/features/languages/components/today-languages-card"
+import { TodayAchievementsCard } from "@/features/achievements/components/today-achievements-card"
 import { TodayHabitsCard } from "@/features/habits/components/today-habits-card"
 import { TodayJournalCard } from "@/features/journal/components/today-journal-card"
 import { ensurePastDaysClosed, getDay } from "@/features/days/queries"
@@ -203,6 +205,12 @@ async function TodayDashboard() {
           </Suspense>
           <Suspense fallback={<Skeleton className="h-28 rounded-xl" />}>
             <TodayGoalsCard />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-28 rounded-xl" />}>
+            <TodayLanguagesCard />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-28 rounded-xl" />}>
+            <TodayAchievementsCard />
           </Suspense>
           <Suspense fallback={<Skeleton className="h-28 rounded-xl" />}>
             <TodayJournalCard />

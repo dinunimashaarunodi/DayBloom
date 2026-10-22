@@ -48,8 +48,12 @@ export default function PrivacyPage() {
               reflections (mood, energy and notes) and the daily history built
               from them, income and expenses with their categories and budgets,
               habits with their check-ins, focus sessions, workouts, goals with
-              their milestones, and journal entries. Deleting a journal entry
-              removes it immediately.
+              their milestones, language practice and vocabulary, and journal
+              entries. Deleting a journal entry removes it immediately.
+            </li>
+            <li>
+              <strong>Achievements:</strong> worked out from the data above; we
+              only store which unlocked achievements you have already seen.
             </li>
           </ul>
         </PrivacySection>

@@ -14,24 +14,26 @@ Anyone can sign up, and each user sees only their own data.
   - Prod auth was pushed from a temporary copy of `config.toml` (`config push --project-ref <prod> --workdir <tmp>`), auth service only.
 - Still waiting on: Resend SMTP (needs a verified domain).
 
-**Phase 12 (Goals) is built and all automated checks pass on dev. Waiting for the user's approval.** Five migrations are not yet in prod: habits (`20261022124056`), journal (`20261022152255`), focus (`20261022153547`), workouts (`20261022155323`) and goals (`20261022211128`). Push them before deploying this code. Next.js was upgraded to 16.4.2 for a critical advisory; deploy it soon. Update this line whenever a phase is completed and verified.
+**Phase 14 (Achievements) is built and all automated checks pass on dev. Waiting for the user's approval.** Prod has every migration up to languages (pushed 2026-10-23); the achievements migration (`20261022220003`) is not in prod yet. The Next.js 16.4.2 security upgrade is not deployed yet either. Update this line whenever a phase is completed and verified.
 
-| Phase | Scope                                                                                   | Status |
-| ----- | --------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                | ✅     |
-| 3     | Tasks and Today page                                                                    | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                   | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                     | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                   | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets            | ✅     |
-| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card               | ✅     |
-| 9     | Journal: entries per local day, search, Today card, entries on History days             | ✅     |
-| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                     | ✅     |
-| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card | ✅     |
-| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card        | ✅     |
-| 13+   | Languages → Achievements → PWA and notifications                                        |        |
+| Phase | Scope                                                                                       | Status |
+| ----- | ------------------------------------------------------------------------------------------- | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                    | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                    | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                    | ✅     |
+| 3     | Tasks and Today page                                                                        | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                       | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                         | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                       | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                | ✅     |
+| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                   | ✅     |
+| 9     | Journal: entries per local day, search, Today card, entries on History days                 | ✅     |
+| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                         | ✅     |
+| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card     | ✅     |
+| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card            | ✅     |
+| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card               | ✅     |
+| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card | ✅     |
+| 15    | PWA and notifications                                                                       |        |
 
 Postponed until the MVP is stable: recurrence, Google Calendar sync, Web Push, offline writes,
 spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calendar editing.
@@ -150,6 +152,12 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - Progress is the share of milestones done. Finishing every milestone suggests "Mark as achieved"; it never happens automatically.
   - Triggers stamp `achieved_at` and `done_at` with the database clock and keep the first achieved moment.
   - A passed target date is stated plainly ("Target date was …"), never as a failure.
+- **Languages** (`features/languages`): languages are archived, never deleted; one per name per user (case-insensitive).
+  - Practice entries belong to a local day (never future). The day streak counts days with any practice; today without practice doesn't break it.
+  - Words have a `learned` flag (trigger stamps `learned_at`). Review is a shuffled flashcard deck of unlearned words, with no SRS scheduling yet. The deck is shuffled on the server and kept for the session.
+- **Achievements** (`features/achievements`): derived, never stored.
+  - `my_achievements()` (SQL, SECURITY INVOKER) returns each code's progress and target from the caller's data. Copy lives in `definitions.ts`; a DB test keeps the codes in sync. Add new ones to both.
+  - `achievement_seen` only records which unlocked ones were seen. Marking them seen must not revalidate, or the open page loses its "New" labels.
 
 ## Database and Supabase security rules
 
@@ -285,6 +293,7 @@ If PowerShell blocks npm with "running scripts is disabled", run:
    - Each user flow gets one end-to-end happy path.
    - All tests share Supabase's per-IP sign-in rate limit (about 30–45 per 5 minutes in practice). The `sign_in_sign_ups` setting and the secret key don't lift it.
      - Seed and poll data with `adminClient()`, not extra sign-ins.
+     - In a bulk insert every row needs the same keys: PostgREST sends missing ones as `null` (not the column default), which can fail the whole insert. Check `error` on seeds.
      - `signedInClient()` reuses one session per user and waits out a rate limit instead of failing.
      - A sudden wave of `fetch failed` errors at test setup means the network dropped. Check connectivity, then rerun.
    - In E2E tests, after navigating, wait for the new page's heading before filling fields: the previous page stays visible until the new one renders, and a field with the same label there gets filled instead.

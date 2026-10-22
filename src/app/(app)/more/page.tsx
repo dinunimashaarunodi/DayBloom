@@ -11,6 +11,8 @@ const DESCRIPTIONS: Record<string, string> = {
   "/focus": "Timed sessions for deep work or study",
   "/workouts": "Log your movement and see your week",
   "/goals": "Bigger aims, broken into milestones",
+  "/languages": "Practice time, vocabulary and flashcards",
+  "/achievements": "Badges for the progress you make",
   "/journal": "Private notes and reflections",
   "/history": "Your past days at a glance",
   "/settings": "Profile, timezone, appearance and account",

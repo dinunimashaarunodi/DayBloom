@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievement_seen: {
+        Row: {
+          code: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          seen_at?: string
+          user_id?: string
+        }
+        Update: {
+          code?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           amount_minor: number | null
@@ -380,6 +398,121 @@ export type Database = {
         }
         Relationships: []
       }
+      language_practice: {
+        Row: {
+          activity: string
+          created_at: string
+          id: string
+          language_id: string
+          local_date: string
+          minutes: number
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          created_at?: string
+          id?: string
+          language_id: string
+          local_date: string
+          minutes: number
+          notes?: string | null
+          user_id?: string
+        }
+        Update: {
+          activity?: string
+          created_at?: string
+          id?: string
+          language_id?: string
+          local_date?: string
+          minutes?: number
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "language_practice_language_fkey"
+            columns: ["language_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      language_words: {
+        Row: {
+          created_at: string
+          example: string | null
+          id: string
+          language_id: string
+          learned: boolean
+          learned_at: string | null
+          meaning: string
+          term: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          example?: string | null
+          id?: string
+          language_id: string
+          learned?: boolean
+          learned_at?: string | null
+          meaning: string
+          term: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          example?: string | null
+          id?: string
+          language_id?: string
+          learned?: boolean
+          learned_at?: string | null
+          meaning?: string
+          term?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "language_words_language_fkey"
+            columns: ["language_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      languages: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          level: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          level?: string | null
+          name: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          level?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -553,6 +686,14 @@ export type Database = {
       current_local_date: { Args: never; Returns: string }
       delete_my_account: { Args: never; Returns: undefined }
       ensure_default_finance_categories: { Args: never; Returns: undefined }
+      my_achievements: {
+        Args: never
+        Returns: {
+          code: string
+          progress: number
+          target: number
+        }[]
+      }
       reorder_tasks: { Args: { task_ids: string[] }; Returns: undefined }
       save_day_review: {
         Args: {

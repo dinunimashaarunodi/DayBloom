@@ -33,17 +33,25 @@ test("choose light, dark or system; the choice survives a reload", async ({
   })
   await expect(html(page)).toHaveClass(/\bdark\b/)
 
-  await appearance
-    .getByRole("radio", { name: "Light", exact: true })
-    .check({ force: true })
+  // Retries until the choice sticks: a click that lands while React is still
+  // taking over the page is undone.
+  const choose = (name: string) =>
+    expect(async () => {
+      const radio = appearance.getByRole("radio", { name, exact: true })
+      await radio.check({ force: true, timeout: 2_000 })
+      await expect(radio).toBeChecked({ timeout: 1_000 })
+    }).toPass()
+
+  await choose("Light")
   await expect(html(page)).not.toHaveClass(/\bdark\b/)
   await page.reload()
   await expect(html(page)).not.toHaveClass(/\bdark\b/)
+  await expect(
+    appearance.getByRole("radio", { name: "Light", exact: true }),
+  ).toBeChecked()
 
   await page.emulateMedia({ colorScheme: "light" })
-  await appearance
-    .getByRole("radio", { name: "Dark", exact: true })
-    .check({ force: true })
+  await choose("Dark")
   await expect(html(page)).toHaveClass(/\bdark\b/)
   await page.reload()
   // Applied before React loads, so there's no flash of the light theme.
@@ -52,9 +60,7 @@ test("choose light, dark or system; the choice survives a reload", async ({
     appearance.getByRole("radio", { name: "Dark", exact: true }),
   ).toBeChecked()
 
-  await appearance
-    .getByRole("radio", { name: "System", exact: true })
-    .check({ force: true })
+  await choose("System")
   await expect(html(page)).not.toHaveClass(/\bdark\b/)
   await page.emulateMedia({ colorScheme: "dark" })
   await expect(html(page)).toHaveClass(/\bdark\b/)
@@ -62,9 +68,12 @@ test("choose light, dark or system; the choice survives a reload", async ({
 
 test("the compact switcher in the app shell works too", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" })
-  await page
-    .getByRole("radio", { name: "Dark theme" })
-    .filter({ visible: true })
-    .check({ force: true })
-  await expect(html(page)).toHaveClass(/\bdark\b/)
+  // Retries like choose() above, for the same reason.
+  await expect(async () => {
+    await page
+      .getByRole("radio", { name: "Dark theme" })
+      .filter({ visible: true })
+      .check({ force: true, timeout: 2_000 })
+    await expect(html(page)).toHaveClass(/\bdark\b/, { timeout: 1_000 })
+  }).toPass()
 })
