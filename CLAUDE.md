@@ -14,26 +14,26 @@ Anyone can sign up, and each user sees only their own data.
   - Prod auth was pushed from a temporary copy of `config.toml` (`config push --project-ref <prod> --workdir <tmp>`), auth service only.
 - Still waiting on: Resend SMTP (needs a verified domain).
 
-**Phase 14 (Achievements) is built and all automated checks pass on dev. Waiting for the user's approval.** Prod has every migration up to languages (pushed 2026-10-23); the achievements migration (`20261022220003`) is not in prod yet. The Next.js 16.4.2 security upgrade is not deployed yet either. Update this line whenever a phase is completed and verified.
+**Phase 15 (installable PWA) is built and all automated checks pass. Waiting for the user's approval.** Prod has every migration (pushed 2026-10-23), so the code can be deployed; the Next.js 16.4.2 security upgrade ships with it. Web Push stays postponed. Update this line whenever a phase is completed and verified.
 
-| Phase | Scope                                                                                       | Status |
-| ----- | ------------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                    | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                    | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                    | ✅     |
-| 3     | Tasks and Today page                                                                        | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                       | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                         | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                       | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                | ✅     |
-| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                   | ✅     |
-| 9     | Journal: entries per local day, search, Today card, entries on History days                 | ✅     |
-| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                         | ✅     |
-| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card     | ✅     |
-| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card            | ✅     |
-| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card               | ✅     |
-| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card | ✅     |
-| 15    | PWA and notifications                                                                       |        |
+| Phase | Scope                                                                                           | Status |
+| ----- | ----------------------------------------------------------------------------------------------- | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                        | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                        | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                        | ✅     |
+| 3     | Tasks and Today page                                                                            | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                           | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                             | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                           | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                    | ✅     |
+| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                       | ✅     |
+| 9     | Journal: entries per local day, search, Today card, entries on History days                     | ✅     |
+| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                             | ✅     |
+| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card         | ✅     |
+| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                | ✅     |
+| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                   | ✅     |
+| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card     | ✅     |
+| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help | ✅     |
 
 Postponed until the MVP is stable: recurrence, Google Calendar sync, Web Push, offline writes,
 spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calendar editing.
@@ -56,6 +56,10 @@ spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calend
   - Examples: the `tasks_before_write` trigger (completion time, move counting), `reorder_tasks()`, `current_local_date()`, and later `close_day`.
   - Don't put business rules only in Server Actions; they must also work for any future client.
 - **Deployment:** Vercel. The mobile experience is an **installable PWA** with no native app.
+- **PWA:** `app/manifest.ts`, icons in `public/icons` plus `app/apple-icon.png` (regenerate with `node scripts/generate-icons.mjs`).
+  - `public/sw.js` only serves `public/offline.html` when a page load fails offline. It caches nothing personal and queues no writes; bump its `CACHE` name when `offline.html` changes.
+  - The worker registers in production only (`components/pwa/pwa-setup.tsx`). The proxy matcher skips `sw.js` and `offline.html` so they load signed out.
+  - `OfflineBanner` warns that changes won't save while offline. Don't enable `experimental.useOffline`: it retries queued Server Actions (offline writes are postponed).
 
 ### Layout
 

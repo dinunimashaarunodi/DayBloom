@@ -1,5 +1,6 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import { PwaSetup } from "@/components/pwa/pwa-setup"
 import { THEME_SCRIPT } from "@/lib/theme"
 
 import "./globals.css"
@@ -17,6 +18,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "DayBloom", template: "%s · DayBloom" },
   description: "Plan your day, track your progress, and watch your life bloom.",
+  applicationName: "DayBloom",
+  appleWebApp: { capable: true, title: "DayBloom", statusBarStyle: "default" },
+}
+
+/** Browser UI colour, matching the page background in each theme. */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#131915" },
+  ],
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -30,7 +41,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <PwaSetup />
+      </body>
     </html>
   )
 }

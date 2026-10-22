@@ -52,6 +52,11 @@ export default function PrivacyPage() {
               entries. Deleting a journal entry removes it immediately.
             </li>
             <li>
+              <strong>On your device:</strong> your theme choice, and (if you
+              install the app) a small offline notice page. Your own data is
+              never stored on the device by the app.
+            </li>
+            <li>
               <strong>Achievements:</strong> worked out from the data above; we
               only store which unlocked achievements you have already seen.
             </li>

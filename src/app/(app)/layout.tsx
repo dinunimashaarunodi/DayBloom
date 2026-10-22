@@ -4,6 +4,7 @@ import { Suspense } from "react"
 
 import { Logo } from "@/components/layout/logo"
 import { MainNav, MainNavLinks } from "@/components/layout/main-nav"
+import { OfflineBanner } from "@/components/pwa/offline-banner"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -59,6 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-28 md:px-10 md:py-10">
+          <OfflineBanner />
           {children}
         </main>
       </div>

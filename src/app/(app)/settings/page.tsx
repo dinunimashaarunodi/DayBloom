@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 
 import { PageHeader } from "@/components/layout/page-header"
+import { InstallApp } from "@/components/pwa/install-app"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import {
   Card,
@@ -58,6 +59,21 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
+              <h2>Install the app</h2>
+            </CardTitle>
+            <CardDescription>
+              Add DayBloom to your home screen or desktop. It opens in its own
+              window, like any other app.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InstallApp />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
               <h2>Account</h2>
             </CardTitle>
             <Suspense fallback={<Skeleton className="h-4 w-48" />}>
@@ -82,7 +98,8 @@ export default function SettingsPage() {
             </CardTitle>
             <CardDescription>
               Permanently deletes your account and everything in it: tasks,
-              events, history and reflections. This can&apos;t be undone.
+              events, history, reflections, finances, habits, focus sessions,
+              workouts, goals, languages and journal. This can&apos;t be undone.
             </CardDescription>
           </CardHeader>
           <CardContent>
