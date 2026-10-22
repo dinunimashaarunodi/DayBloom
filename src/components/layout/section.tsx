@@ -18,7 +18,7 @@ export function Section({
     <section aria-labelledby={`${id}-heading`} className="grid gap-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="grid gap-0.5">
-          <h2 id={`${id}-heading`} className="font-medium">
+          <h2 id={`${id}-heading`} className="text-base font-semibold">
             {title}
           </h2>
           {description && (

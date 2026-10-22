@@ -1,11 +1,12 @@
-// Renders DayBloom's app icons (the logo's Sprout on forest green) to PNG
+// Renders DayBloom's app icons (the logo's Sprout on the bloom gradient) to PNG
 // with Playwright's Chromium. Run after changing the logo:
 //   node scripts/generate-icons.mjs
 import { mkdir } from "node:fs/promises"
 
 import { chromium } from "@playwright/test"
 
-const FOREST = "#315C49"
+// The bloom gradient (globals.css: --bloom-from/via/to).
+const BLOOM = ["#0f766e", "#4338ca", "#7c3aed"]
 // lucide "sprout" (the icon in components/layout/logo.tsx), 24×24 viewBox.
 const SPROUT = `
   <path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/>
@@ -22,7 +23,8 @@ function svg(size, { radius, glyph }) {
   const g = size * glyph
   const offset = (size - g) / 2
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" rx="${size * radius}" fill="${FOREST}"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${BLOOM[0]}"/><stop offset="0.58" stop-color="${BLOOM[1]}"/><stop offset="1" stop-color="${BLOOM[2]}"/></linearGradient></defs>
+  <rect width="${size}" height="${size}" rx="${size * radius}" fill="url(#g)"/>
   <svg x="${offset}" y="${offset}" width="${g}" height="${g}" viewBox="0 0 24 24" fill="none"
        stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SPROUT}</svg>
 </svg>`

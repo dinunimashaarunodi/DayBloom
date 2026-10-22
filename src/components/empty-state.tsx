@@ -19,11 +19,16 @@ export function EmptyState({
   children?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed bg-card/60 px-6 py-10 text-center">
-      <div className={cn("rounded-full p-3", ACCENT_CHIP[accent])}>
+    <div className="flex animate-in flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card/70 px-6 py-10 text-center duration-300 fade-in">
+      <div
+        className={cn(
+          "rounded-2xl p-3.5 ring-8 ring-current/5",
+          ACCENT_CHIP[accent],
+        )}
+      >
         <Icon className="size-6" aria-hidden="true" />
       </div>
-      <h2 className="font-medium">{title}</h2>
+      <h2 className="font-semibold">{title}</h2>
       {children && (
         <div className="max-w-sm text-sm text-muted-foreground">{children}</div>
       )}

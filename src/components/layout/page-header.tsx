@@ -17,9 +17,11 @@ export function PageHeader({
     <header className="mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-8">
       <div className="grid gap-1">
         {eyebrow && (
-          <p className="text-sm font-medium text-muted-foreground">{eyebrow}</p>
+          <p className="text-sm font-semibold text-primary">{eyebrow}</p>
         )}
-        <h1 className="text-2xl font-semibold md:text-3xl">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {title}
+        </h1>
         {description && (
           <p className="text-sm text-muted-foreground md:text-base">
             {description}

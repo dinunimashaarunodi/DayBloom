@@ -5,7 +5,7 @@
 // pages, API responses or anything personal, and it doesn't queue writes
 // (offline writes are postponed). Bump CACHE when offline.html changes.
 
-const CACHE = "daybloom-offline-v1"
+const CACHE = "daybloom-offline-v2"
 const OFFLINE_URL = "/offline.html"
 
 self.addEventListener("install", (event) => {

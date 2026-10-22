@@ -206,46 +206,47 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 
 ## Design system
 
-Calm, premium and nature-inspired, never a generic admin dashboard. Tokens live in `src/app/globals.css`. Always use the tokens; don't hard-code colours.
+"Midnight bloom" (redesigned 2026-10-23 at the user's request; replaces the earlier white, forest-green look): modern, colourful and calm, never a generic admin template. Tokens live in `src/app/globals.css`. Always use the tokens; don't hard-code colours.
 
-- **Colours (light):**
-  - page `background` #FFFFFF (white, by request), `card` #FFFFFF, `muted` #F4F3EE (soft cream for bars and hovers), `foreground` #26352D (evergreen)
-  - `primary` #315C49 (forest: primary actions and the selected nav item only)
-  - `muted-foreground` #647064, `border` #E6E3D9
-  - `input` #8E978C (form-field outlines need 3:1 contrast)
+- **Colours:**
+  - Light: tinted page `background` #F4F6FB with two soft colour glows, white `card`, navy `foreground` #121A2E, teal `primary` #0F766E, `muted-foreground` #556079, `input` #8790A6 (3:1 for field outlines).
+  - Dark: midnight `background` #0A0F1E, `card` #111A2E, `primary` #2DD4BF.
+  - The **bloom** gradient (`bg-bloom`: teal → indigo → violet, stops `--bloom-from/via/to`) marks highlights only: the Today hero, the active nav item, the logo, avatars and the brand panel. White text on it passes AA.
+  - Run `node scripts/check-contrast.mjs` after any colour change; it checks every text/background pair and the non-text 3:1 pairs in both themes.
 - **Theme:** users choose System, Light or Dark with `ThemeSwitcher` (in the sidebar, the mobile top bar and Settings → Appearance).
   - The choice is stored per device in localStorage.
   - `THEME_SCRIPT` (`src/lib/theme.ts`) sets the `.dark` class on `<html>` before first paint.
-  - Every token has a dark value under `:root.dark`, so check both themes.
-- **Module accents** come from `ACCENT_CHIP` in `src/components/accent.ts`. Use them for icon chips and small highlights only, never page themes:
-  - sage: planner, tasks, habits
-  - peach: expenses
-  - lavender: study, languages
-  - mint: workouts, wellness, reflection
-  - rose plus restrained `gold`: achievements
-- **Contrast:**
-  - Text on `sage` uses `foreground` or `sage-ink`, never `muted-foreground` (4.27:1 fails AA).
+  - Dark tokens are defined for `:root.dark, .dark`, so any subtree with the `dark` class uses them. The sidebar is dark in both themes this way.
+- **Module accents** come from `ACCENT_CHIP` in `src/components/accent.ts` (tinted background + `*-ink` text). Use them for icon chips and small highlights only, never page themes:
+  - sage (teal-green): planner, tasks, habits
+  - peach (amber): expenses
+  - lavender (violet): focus, study, languages
+  - mint (sky): workouts, wellness, reflection, schedule
+  - rose plus restrained `gold`: achievements, journal
   - `gold` is for icons only.
 - **Surfaces:**
-  - Cards and lists use the `surface` utility (≈17px radius, thin border, `shadow-soft`). shadcn `Card` matches it.
-  - Buttons and inputs use a 12px radius.
+  - Cards and lists use the `surface` utility (≈17px radius, thin border, layered `shadow-soft`). Cards that are links add `surface-interactive` (lifts on hover and focus). shadcn `Card` matches `surface`.
+  - `glass` is for the mobile top bar and the floating tab bar only.
+  - Buttons and inputs use a 12px radius; primary buttons have a soft coloured shadow and press slightly.
 - **Building blocks:**
-  - `PageHeader` (eyebrow, title, actions)
+  - `PageHeader` (eyebrow in `primary`, title, actions)
   - `DashboardCard` (title, accent icon chip, optional action)
-  - `Section`
+  - `Section` (title, description, optional actions)
   - `EmptyState` (accent, helpful copy, optional action)
+  - `ProgressRing` (`components/progress-ring.tsx`), `BrandPanel` (landing and auth)
 - **Layout:**
-  - Desktop has a 16rem sidebar and `max-w-5xl` content.
-  - Mobile has a top bar (theme switcher and a Settings icon) and six bottom tabs: the five `tab: true` items in `components/layout/nav-items.ts` plus **More** (`/more`), which lists every other page. Single-column grids widen at `sm`/`lg`; touch targets are 36–40px or more.
-- **Dashboard (Today):** show only real data.
-  - Add each module's card (study time, expenses, habits, goals, achievements) when that module is built. Never add placeholder statistics.
+  - Desktop has a 16rem dark sidebar with grouped navigation (`NAV_GROUPS` in `components/layout/nav-items.ts`) and `max-w-6xl` content.
+  - Mobile has a frosted top bar (theme switcher and a Settings icon) and a floating tab bar: Today, Tasks, Habits, Calendar, Finance and **More** (`/more`), which lists every other page.
+  - Single-column grids widen at `sm`/`lg`; touch targets are 36–40px or more; no horizontal page scrolling (the screenshot QA script checks `scrollWidth`).
+- **Today:** a gradient hero (greeting, task progress ring, today's numbers, one suggested next step from `features/today/logic.ts`), quick actions, the plan and side cards, then "Across your life" module cards and the reflection.
+  - Show only real data. Every module card links somewhere real; never add placeholder statistics.
 - **Charts** (Recharts):
   - Follow the dataviz skill: one series per chart (no legend), bars at most 24px with 4px rounded data-ends, hairline solid gridlines.
   - Text uses text tokens, every bar gets a hover tooltip, and each chart has an `sr-only` table of its data.
-  - Expense bars use `--chart-expense`, validated with the dataviz script for both themes. Validate any new chart colour the same way.
-- **Typography:** Geist. Page titles are `text-2xl md:text-3xl font-semibold`; section titles are `font-medium`.
+  - Expense bars use `--chart-expense`, checked at 3:1 against the card in both themes by `scripts/check-contrast.mjs`. Check any new chart colour the same way.
+- **Typography:** Geist. Page titles are `text-2xl sm:text-3xl font-semibold tracking-tight`; section and card titles are `font-semibold`.
 - **Motion:**
-  - Short and subtle: 200–500ms fades and zooms via `tw-animate-css`, small celebrations when finishing tasks.
+  - Short and subtle: pages fade and rise in (`(app)/template.tsx`), cards lift on hover, 200–500ms fades and zooms via `tw-animate-css`, small celebrations when finishing things.
   - Everything is disabled under `prefers-reduced-motion` in `globals.css`.
 - **Accessibility:**
   - Accessible labels, keyboard navigation and visible focus rings (`ring-ring/50`).

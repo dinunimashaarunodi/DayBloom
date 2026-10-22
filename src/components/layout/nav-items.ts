@@ -16,29 +16,52 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+export type NavGroup = "day" | "grow" | "life" | "you"
+
+/** Sidebar group headings, in order. */
+export const NAV_GROUPS: { id: NavGroup; label: string }[] = [
+  { id: "day", label: "Your day" },
+  { id: "grow", label: "Grow" },
+  { id: "life", label: "Life" },
+  { id: "you", label: "You" },
+]
+
 export type NavItem = {
   href: string
   label: string
   icon: LucideIcon
+  group: NavGroup
   /** Shown in the mobile tab bar; the rest are listed on the More page. */
   tab?: true
 }
 
-/** Every page in the sidebar, in order. Keep at most five `tab` items. */
+/** Every page, in sidebar order. Keep at most five `tab` items. */
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/today", label: "Today", icon: Sun, tab: true },
-  { href: "/tasks", label: "Tasks", icon: ListChecks, tab: true },
-  { href: "/habits", label: "Habits", icon: Repeat, tab: true },
-  { href: "/focus", label: "Focus", icon: Timer },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays, tab: true },
-  { href: "/finance", label: "Finance", icon: Wallet, tab: true },
-  { href: "/workouts", label: "Workouts", icon: Dumbbell },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/languages", label: "Languages", icon: Languages },
-  { href: "/achievements", label: "Achievements", icon: Trophy },
-  { href: "/journal", label: "Journal", icon: NotebookPen },
-  { href: "/history", label: "History", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/today", label: "Today", icon: Sun, group: "day", tab: true },
+  { href: "/tasks", label: "Tasks", icon: ListChecks, group: "day", tab: true },
+  {
+    href: "/calendar",
+    label: "Calendar",
+    icon: CalendarDays,
+    group: "day",
+    tab: true,
+  },
+  { href: "/habits", label: "Habits", icon: Repeat, group: "day", tab: true },
+  { href: "/focus", label: "Focus", icon: Timer, group: "grow" },
+  { href: "/workouts", label: "Workouts", icon: Dumbbell, group: "grow" },
+  { href: "/goals", label: "Goals", icon: Target, group: "grow" },
+  { href: "/languages", label: "Languages", icon: Languages, group: "grow" },
+  { href: "/achievements", label: "Achievements", icon: Trophy, group: "grow" },
+  {
+    href: "/finance",
+    label: "Finance",
+    icon: Wallet,
+    group: "life",
+    tab: true,
+  },
+  { href: "/journal", label: "Journal", icon: NotebookPen, group: "life" },
+  { href: "/history", label: "History", icon: History, group: "life" },
+  { href: "/settings", label: "Settings", icon: Settings, group: "you" },
 ]
 
 /** The sixth mobile tab: everything that isn't a tab. */
@@ -46,6 +69,7 @@ export const MORE_ITEM: NavItem = {
   href: "/more",
   label: "More",
   icon: Ellipsis,
+  group: "you",
 }
 
 export const MORE_ITEMS = NAV_ITEMS.filter((item) => !item.tab)

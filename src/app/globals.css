@@ -10,8 +10,10 @@
 
 /*
  * DayBloom design system (see CLAUDE.md, "Design system").
- * Calm, nature-inspired: cream page, white cards, forest green for actions,
- * pastel accents only to mark a module. Contrast checked against WCAG AA.
+ * "Midnight bloom": navy ink, teal for actions, an indigo-to-violet "bloom"
+ * gradient for highlights, and richer module accents. Tinted backgrounds with
+ * soft colour glows in light; deep midnight in dark. Contrast is checked
+ * against WCAG AA (scripts/check-contrast.mjs).
  */
 
 @theme inline {
@@ -52,14 +54,23 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Module accents (backgrounds). Text on them uses foreground or *-ink. */
+  /* Module accents: tinted backgrounds, each with a readable *-ink. */
   --color-sage: var(--sage);
   --color-sage-ink: var(--sage-ink);
   --color-lavender: var(--lavender);
+  --color-lavender-ink: var(--lavender-ink);
   --color-peach: var(--peach);
+  --color-peach-ink: var(--peach-ink);
   --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
   --color-rose: var(--rose);
+  --color-rose-ink: var(--rose-ink);
   --color-gold: var(--gold);
+
+  /* The "bloom" gradient stops (hero, highlights, the active nav item). */
+  --color-bloom-from: var(--bloom-from);
+  --color-bloom-via: var(--bloom-via);
+  --color-bloom-to: var(--bloom-to);
 
   --shadow-soft: var(--shadow-soft);
   --shadow-lift: var(--shadow-lift);
@@ -75,110 +86,134 @@
 
 :root {
   color-scheme: light;
-  --background: #ffffff; /* white page (cream #f7f6f0 kept for muted areas) */
-  --foreground: #26352d; /* deep evergreen */
+  --background: #f4f6fb; /* cool, faintly tinted page */
+  --foreground: #121a2e; /* navy ink */
   --card: #ffffff;
-  --card-foreground: #26352d;
+  --card-foreground: #121a2e;
   --popover: #ffffff;
-  --popover-foreground: #26352d;
-  --primary: #315c49; /* forest green: actions, selected navigation */
+  --popover-foreground: #121a2e;
+  --primary: #0f766e; /* teal: primary actions */
   --primary-foreground: #ffffff;
-  --secondary: #e5ebdd; /* sage */
-  --secondary-foreground: #26352d;
-  --muted: #f4f3ee;
-  --muted-foreground: #647064;
-  --accent: #e5ebdd;
-  --accent-foreground: #26352d;
-  --destructive: #b4443a;
-  --warning: #8a5a1f;
-  --border: #e6e3d9;
-  --input: #8e978c; /* 3:1 on white, so form fields stay visible */
-  --ring: #315c49;
+  --secondary: #e3f3f0;
+  --secondary-foreground: #0d3b37;
+  --muted: #edf0f7;
+  --muted-foreground: #556079;
+  --accent: #e8ecf8;
+  --accent-foreground: #121a2e;
+  --destructive: #c02626;
+  --warning: #9a4a07;
+  --border: #e1e5ef;
+  --input: #8790a6; /* 3:1 on white, so form fields stay visible */
+  --ring: #0f766e;
 
-  --sage: #e5ebdd;
-  --sage-ink: #4e5c52;
-  --lavender: #ede7f6;
-  --peach: #f7e8d5;
-  --mint: #dcece7;
-  --rose: #f5e3e1;
-  --gold: #b08a3e; /* icons and accents only, never body text */
+  --sage: #d6f3ea;
+  --sage-ink: #0b5a4f;
+  --lavender: #ebe7fd;
+  --lavender-ink: #4a2fae;
+  --peach: #fdebd3;
+  --peach-ink: #8a3f0a;
+  --mint: #d6eff9;
+  --mint-ink: #0b5670;
+  --rose: #fde3e8;
+  --rose-ink: #9b1c3a;
+  --gold: #c27c0e; /* icons and accents only, never body text */
 
-  --chart-1: #315c49;
-  --chart-2: #7fa38d;
-  --chart-3: #b7a1d6;
-  --chart-4: #e0b98a;
-  --chart-5: #d99a93;
-  /* Expense bars. Validated (dataviz validator) against the white card. */
-  --chart-expense: #c0783f;
+  --bloom-from: #0f766e;
+  --bloom-via: #4338ca;
+  --bloom-to: #7c3aed;
+  --glow-strength: 10%;
 
-  --shadow-soft: 0 1px 2px rgb(38 53 45 / 0.05), 0 2px 8px rgb(38 53 45 / 0.05);
+  --chart-1: #0f766e;
+  --chart-2: #4338ca;
+  --chart-3: #7c3aed;
+  --chart-4: #e8590c;
+  --chart-5: #db2777;
+  /* Expense bars: 3:1+ against the white card (scripts/check-contrast.mjs). */
+  --chart-expense: #e2580b;
+
+  --shadow-soft:
+    0 1px 2px rgb(18 26 46 / 0.04), 0 4px 16px rgb(18 26 46 / 0.05);
   --shadow-lift:
-    0 2px 6px rgb(38 53 45 / 0.06), 0 8px 24px rgb(38 53 45 / 0.06);
+    0 2px 6px rgb(18 26 46 / 0.06), 0 12px 32px rgb(18 26 46 / 0.1);
 
   --radius: 0.75rem; /* buttons 12px, cards (radius-xl) ~17px */
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #26352d;
-  --sidebar-primary: #315c49;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef1e8;
-  --sidebar-accent-foreground: #26352d;
-  --sidebar-border: #e6e3d9;
-  --sidebar-ring: #315c49;
+  --sidebar: #0b1224;
+  --sidebar-foreground: #e8ecf6;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #04201d;
+  --sidebar-accent: #18223a;
+  --sidebar-accent-foreground: #e8ecf6;
+  --sidebar-border: #1f2a44;
+  --sidebar-ring: #2dd4bf;
 }
 
-:root.dark {
+/*
+ * Dark tokens. `.dark` also works on any element, so a subtree (the sidebar)
+ * can stay dark in the light theme.
+ */
+:root.dark,
+.dark {
   color-scheme: dark;
-  --background: #131915;
-  --foreground: #e8ede6;
-  --card: #1b231e;
-  --card-foreground: #e8ede6;
-  --popover: #1b231e;
-  --popover-foreground: #e8ede6;
-  --primary: #8fc2a7;
-  --primary-foreground: #0f2419;
-  --secondary: #26332a;
-  --secondary-foreground: #e8ede6;
-  --muted: #222b25;
-  --muted-foreground: #a3afa5;
-  --accent: #26332a;
-  --accent-foreground: #e8ede6;
-  --destructive: #e88a80;
-  --warning: #e2b87a;
-  --border: #2c3630;
-  --input: #6e7b72;
-  --ring: #8fc2a7;
+  --background: #0a0f1e; /* midnight */
+  --foreground: #e8ecf6;
+  --card: #111a2e;
+  --card-foreground: #e8ecf6;
+  --popover: #141e35;
+  --popover-foreground: #e8ecf6;
+  --primary: #2dd4bf;
+  --primary-foreground: #04201d;
+  --secondary: #11302c;
+  --secondary-foreground: #d4f5ee;
+  --muted: #18223a;
+  --muted-foreground: #9aa5c0;
+  --accent: #1c2742;
+  --accent-foreground: #e8ecf6;
+  --destructive: #f87171;
+  --warning: #fbbf24;
+  --border: #222d48;
+  --input: #66749a;
+  --ring: #2dd4bf;
 
-  --sage: #26332a;
-  --sage-ink: #c3d1c0;
-  --lavender: #2c2738;
-  --peach: #3a2e22;
-  --mint: #1f3330;
-  --rose: #3a2626;
-  --gold: #d9b56a;
+  --sage: #0f3a35;
+  --sage-ink: #86ecd8;
+  --lavender: #29235a;
+  --lavender-ink: #c8bbfd;
+  --peach: #3d2a12;
+  --peach-ink: #fdbd7c;
+  --mint: #0c3245;
+  --mint-ink: #8bd8fb;
+  --rose: #441a2b;
+  --rose-ink: #fca9b8;
+  --gold: #fbbf24;
 
-  --chart-1: #8fc2a7;
-  --chart-2: #5f8a72;
-  --chart-3: #b7a1d6;
-  --chart-4: #e0b98a;
-  --chart-5: #d99a93;
-  /* Validated against the dark card (#1b231e). */
-  --chart-expense: #c77d44;
+  --bloom-from: #0f766e;
+  --bloom-via: #4338ca;
+  --bloom-to: #6d28d9;
+  --glow-strength: 18%;
 
-  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.25);
-  --shadow-lift: 0 4px 16px rgb(0 0 0 / 0.35);
+  --chart-1: #2dd4bf;
+  --chart-2: #818cf8;
+  --chart-3: #a78bfa;
+  --chart-4: #fb923c;
+  --chart-5: #f472b6;
+  /* 3:1+ against the dark card (scripts/check-contrast.mjs). */
+  --chart-expense: #fb923c;
 
-  --sidebar: #161d18;
-  --sidebar-foreground: #e8ede6;
-  --sidebar-primary: #8fc2a7;
-  --sidebar-primary-foreground: #0f2419;
-  --sidebar-accent: #222b25;
-  --sidebar-accent-foreground: #e8ede6;
-  --sidebar-border: #2c3630;
-  --sidebar-ring: #8fc2a7;
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.2);
+  --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.35), 0 16px 40px rgb(0 0 0 / 0.3);
+
+  --sidebar: #0b1224;
+  --sidebar-foreground: #e8ecf6;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #04201d;
+  --sidebar-accent: #18223a;
+  --sidebar-accent-foreground: #e8ecf6;
+  --sidebar-border: #1f2a44;
+  --sidebar-ring: #2dd4bf;
 }
 
-/* A white card with a thin neutral border and a very soft shadow. */
+/* A card: thin border, soft layered shadow. */
 @utility surface {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
@@ -187,12 +222,62 @@
   box-shadow: var(--shadow-soft);
 }
 
+/* For cards that are links: lifts slightly on hover and keyboard focus. */
+@utility surface-interactive {
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+  }
+}
+
+/* The brand gradient. White text on it passes AA at every stop. */
+@utility bg-bloom {
+  background-color: var(--bloom-via);
+  background-image: linear-gradient(
+    135deg,
+    var(--bloom-from) 0%,
+    var(--bloom-via) 58%,
+    var(--bloom-to) 100%
+  );
+  color: #ffffff;
+}
+
+/* Frosted bars (mobile top bar and tab bar). */
+@utility glass {
+  background-color: color-mix(in oklab, var(--card) 92%, transparent);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    /* Two soft colour glows behind everything; stronger in dark. */
+    background-image:
+      radial-gradient(
+        1100px 520px at -10% -10%,
+        color-mix(
+          in oklab,
+          var(--bloom-from) var(--glow-strength),
+          transparent
+        ),
+        transparent 70%
+      ),
+      radial-gradient(
+        900px 480px at 110% -5%,
+        color-mix(in oklab, var(--bloom-to) var(--glow-strength), transparent),
+        transparent 70%
+      );
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;

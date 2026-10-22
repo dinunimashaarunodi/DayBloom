@@ -13,15 +13,17 @@ import { UserSummary } from "@/features/profile/components/user-summary"
 import { cn } from "@/lib/utils"
 
 /**
- * Authenticated app shell: sidebar on desktop, top bar + bottom tabs on mobile.
- * The shell itself is static; only the user summary reads the session, so it
- * streams in behind <Suspense>. Pages protect their own data via getCurrentUser().
+ * Authenticated app shell: a dark brand sidebar on desktop (dark in both
+ * themes: the `dark` class switches its tokens), a frosted top bar and a
+ * floating tab bar on mobile. The shell is static; only the user summary
+ * reads the session, so it streams in behind <Suspense>. Pages protect their
+ * own data via getCurrentUser().
  */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 border-r border-sidebar-border bg-sidebar px-4 py-6 md:flex">
-        <div className="px-3 pt-2">
+      <aside className="dark sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-5 overflow-y-auto bg-sidebar bg-[radial-gradient(120%_60%_at_0%_0%,color-mix(in_oklab,var(--bloom-via)_28%,transparent),transparent_70%)] px-3 py-5 text-sidebar-foreground md:flex">
+        <div className="px-3 pt-1">
           <Logo href="/today" />
         </div>
         <nav aria-label="Main">
@@ -31,11 +33,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <MainNav variant="sidebar" />
           </Suspense>
         </nav>
-        <div className="mt-auto grid gap-2 border-t border-sidebar-border pt-4">
-          <Suspense fallback={<Skeleton className="mx-3 h-9" />}>
+        <div className="mt-auto grid gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/60 p-3">
+          <Suspense fallback={<Skeleton className="h-9" />}>
             <UserSummary />
           </Suspense>
-          <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center justify-between gap-2">
             <SignOutButton />
             <ThemeSwitcher />
           </div>
@@ -43,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur-md md:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b glass px-4 md:hidden">
           <Logo href="/today" />
           <div className="flex items-center gap-1">
             <ThemeSwitcher />
@@ -59,7 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-28 md:px-10 md:py-10">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-32 sm:px-6 md:px-10 md:py-10">
           <OfflineBanner />
           {children}
         </main>
@@ -67,7 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-10 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 rounded-2xl border glass px-1 py-1 shadow-lift md:hidden"
       >
         <Suspense fallback={<MainNavLinks variant="tabs" pathname={null} />}>
           <MainNav variant="tabs" />
