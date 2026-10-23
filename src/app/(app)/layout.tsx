@@ -37,13 +37,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <MainNav variant="sidebar" />
           </Suspense>
         </nav>
-        <div className="grid shrink-0 gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/70 p-3">
-          <Suspense fallback={<Skeleton className="h-10" />}>
-            <UserSummary />
-          </Suspense>
-          <div className="flex items-center justify-between gap-2 border-t border-sidebar-border pt-3">
+        <div className="grid shrink-0 gap-2">
+          {/* Profile details in their own card. */}
+          <div className="rounded-2xl border border-sidebar-border bg-sidebar-accent/70 p-3">
+            <Suspense fallback={<Skeleton className="h-10" />}>
+              <UserSummary />
+            </Suspense>
+          </div>
+          {/* Theme and sign-out sit separately, below the card. */}
+          <div className="flex items-center justify-between gap-2 px-1">
             <ThemeSwitcher />
-            <SignOutButton compact />
+            <SignOutButton className="w-fit" />
           </div>
         </div>
       </aside>
