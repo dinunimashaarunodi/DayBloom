@@ -1,4 +1,9 @@
-import { addDays, startOfWeek, type LocalDate } from "@/lib/dates/local-date"
+import {
+  addDays,
+  daysBetween,
+  startOfWeek,
+  type LocalDate,
+} from "@/lib/dates/local-date"
 
 export const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const
 export type Level = (typeof LEVELS)[number]
@@ -36,6 +41,10 @@ export type Word = {
   meaning: string
   example: string | null
   learned: boolean
+  /** Leitner box: 0 new, 1–5 reviewed (higher = known better). */
+  box: number
+  /** Next review day; null = due now (new words). */
+  due_on: LocalDate | null
 }
 
 export function activityLabel(activity: Activity): string {
@@ -75,14 +84,54 @@ export function dayStreak(dates: LocalDate[], today: LocalDate): number {
 }
 
 /**
- * The review deck: words still being learned, shuffled with `random` (a
- * function returning [0, 1), so tests can pass a fixed one).
+ * Days until a word comes back after a review leaves it in `box` (1–5).
+ * Mirrors public.word_review_interval() (DB-tested).
  */
-export function reviewDeck<T extends Pick<Word, "learned">>(
+export function reviewIntervalDays(box: number): number {
+  return [1, 1, 3, 7, 14, 30][Math.min(Math.max(box, 1), 5)]!
+}
+
+/** Still being learned and due today (or earlier, or never reviewed). */
+export function isDue(
+  word: Pick<Word, "learned" | "due_on">,
+  today: LocalDate,
+): boolean {
+  return !word.learned && (word.due_on === null || word.due_on <= today)
+}
+
+/** "Due now", "Tomorrow", "In 3 days" for a word's next review. */
+export function nextReviewLabel(
+  word: Pick<Word, "learned" | "due_on">,
+  today: LocalDate,
+): string | null {
+  if (word.learned) return null
+  if (isDue(word, today)) return "Due now"
+  const days = daysBetween(today, word.due_on!)
+  return days === 1 ? "Review tomorrow" : `Review in ${days} days`
+}
+
+/** The earliest upcoming review among words not due yet, or null. */
+export function nextReviewDay(
+  words: Pick<Word, "learned" | "due_on">[],
+  today: LocalDate,
+): LocalDate | null {
+  const upcoming = words
+    .filter((w) => !w.learned && w.due_on !== null && w.due_on > today)
+    .map((w) => w.due_on!)
+    .sort()
+  return upcoming[0] ?? null
+}
+
+/**
+ * The review deck: words due today, shuffled with `random` (a function
+ * returning [0, 1), so tests can pass a fixed one).
+ */
+export function reviewDeck<T extends Pick<Word, "learned" | "due_on">>(
   words: T[],
+  today: LocalDate,
   random: () => number = Math.random,
 ): T[] {
-  const deck = words.filter((w) => !w.learned)
+  const deck = words.filter((w) => isDue(w, today))
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1))
     ;[deck[i], deck[j]] = [deck[j]!, deck[i]!]

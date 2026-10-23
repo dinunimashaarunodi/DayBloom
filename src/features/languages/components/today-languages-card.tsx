@@ -11,6 +11,8 @@ import { getLanguagesOverview } from "../queries"
 export async function TodayLanguagesCard() {
   const { today, languages, practice } = await getLanguagesOverview()
   const active = languages.filter((l) => !l.archived)
+  const dueIn = active.filter((l) => l.due > 0)
+  const due = dueIn.reduce((sum, l) => sum + l.due, 0)
   const todayMinutes = dayMinutes(practice, today)
   const streak = dayStreak(
     practice.map((p) => p.local_date),
@@ -46,6 +48,18 @@ export async function TodayLanguagesCard() {
             This week: {formatMinutes(weekMinutes(practice, today))}
             {streak > 1 && ` · ${streak}-day streak`}
           </span>
+          {due > 0 && (
+            <Link
+              href={
+                dueIn.length === 1
+                  ? `/languages/${dueIn[0]!.id}/review`
+                  : "/languages"
+              }
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {due} word{due === 1 ? "" : "s"} to review today
+            </Link>
+          )}
         </p>
       )}
     </DashboardCard>

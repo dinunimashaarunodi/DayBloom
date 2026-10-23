@@ -20,7 +20,7 @@ import { PracticeForm } from "@/features/languages/components/practice-form"
 import { PracticeList } from "@/features/languages/components/practice-list"
 import { WordForm } from "@/features/languages/components/word-form"
 import { WordList } from "@/features/languages/components/word-list"
-import { weekMinutes } from "@/features/languages/logic"
+import { isDue, weekMinutes } from "@/features/languages/logic"
 import {
   getLanguage,
   getLanguagesOverview,
@@ -66,7 +66,7 @@ async function LanguageDetail({
 
   const practice = allPractice.filter((p) => p.language_id === id)
   const learned = words.filter((w) => w.learned).length
-  const toReview = words.length - learned
+  const toReview = words.filter((w) => isDue(w, today)).length
 
   return (
     <>
@@ -128,7 +128,7 @@ async function LanguageDetail({
               flashcards.
             </EmptyState>
           ) : (
-            <WordList words={words} />
+            <WordList words={words} today={today} />
           )}
         </Section>
 

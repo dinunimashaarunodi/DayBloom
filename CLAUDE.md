@@ -319,7 +319,7 @@ If PowerShell blocks npm with "running scripts is disabled", run:
      - Next.js sends actions one at a time, and a second action queued behind the first was observed to be lost.
 4. **Definition of done.** These must all pass: `format:check`, `lint`, `typecheck`, `test` and `build`.
    - Also `test:db` after any schema change, and `test:e2e` after any user-flow change.
-5. **Finish each phase before starting the next.** Stop after each phase for the user to verify and approve.
+5. **Finish each phase before starting the next.** Verify each phase fully, then start the next one without asking (the user's request, 2026-10-23), and report once at the end of the list. Production migrations, commits and pushes still wait for the user.
 6. **Report after every task** with:
    - the files modified or created
    - the commands executed

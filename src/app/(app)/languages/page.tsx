@@ -107,6 +107,7 @@ async function Overview() {
                       {formatMinutes(minutes)} this week · {language.learned} of{" "}
                       {language.words} word
                       {language.words === 1 ? "" : "s"} learned
+                      {language.due > 0 && ` · ${language.due} to review`}
                     </span>
                   </Link>
                 </li>

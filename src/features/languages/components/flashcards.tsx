@@ -7,13 +7,14 @@ import { useState, useTransition } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-import { setWordLearned } from "../actions"
+import { reviewWord } from "../actions"
 import type { Word } from "../logic"
 
 /**
- * Flip-card review of words still being learned. The deck order comes from
- * the server, so the first render matches on both sides. "Got it" marks the
- * word as learned; "Still learning" just moves on.
+ * Flip-card review of the words due today (spaced repetition). The deck order
+ * comes from the server, so the first render matches on both sides.
+ * "Got it" moves a word to a longer interval; "Still learning" brings it back
+ * tomorrow and once more at the end of this session.
  */
 export function Flashcards({
   deck: initialDeck,
@@ -22,32 +23,39 @@ export function Flashcards({
   deck: Word[]
   backHref: string
 }) {
-  // Keep this session's deck: marking a word learned re-renders the page with
-  // a new (smaller, reshuffled) deck, which must not change the cards mid-review.
-  const [deck] = useState(initialDeck)
+  // Keep this session's deck: each answer revalidates the page, which must
+  // not change the cards mid-review.
+  const [deck, setDeck] = useState(initialDeck)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [learned, setLearned] = useState(0)
+  const [stats, setStats] = useState({ remembered: 0, again: 0, learned: 0 })
+  const [retried, setRetried] = useState<ReadonlySet<string>>(new Set())
   const [saving, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
   const word = deck[index]
+  const words = initialDeck.length
 
-  function next() {
-    setFlipped(false)
-    setIndex((i) => i + 1)
-  }
-
-  function gotIt(id: string) {
+  function answer(card: Word, remembered: boolean) {
     startTransition(async () => {
-      const result = await setWordLearned(id, true)
+      const result = await reviewWord(card.id, remembered)
       if (result.error) {
         setError(result.error)
         return
       }
       setError(undefined)
-      setLearned((n) => n + 1)
-      next()
+      setStats((s) => ({
+        remembered: s.remembered + (remembered ? 1 : 0),
+        again: s.again + (remembered ? 0 : 1),
+        learned: s.learned + (result.learned ? 1 : 0),
+      }))
+      // A forgotten word comes round once more before the session ends.
+      if (!remembered && !retried.has(card.id)) {
+        setDeck((d) => [...d, card])
+        setRetried((r) => new Set(r).add(card.id))
+      }
+      setFlipped(false)
+      setIndex((i) => i + 1)
     })
   }
 
@@ -58,9 +66,11 @@ export function Flashcards({
         <p className="text-lg font-medium" role="status">
           Review done!
         </p>
-        <p className="text-sm text-muted-foreground">
-          You went through {deck.length} word{deck.length === 1 ? "" : "s"}
-          {learned > 0 && ` and marked ${learned} as learned`}.
+        <p className="max-w-sm text-sm text-muted-foreground">
+          You went through {words} word{words === 1 ? "" : "s"}.
+          {stats.learned > 0 &&
+            ` ${stats.learned} ${stats.learned === 1 ? "is" : "are"} now learned.`}{" "}
+          Words you knew come back later; the tricky ones come back tomorrow.
         </p>
         <Link
           href={backHref}
@@ -74,9 +84,12 @@ export function Flashcards({
 
   return (
     <div className="grid gap-4">
-      <p className="text-sm text-muted-foreground tabular-nums">
-        Card {index + 1} of {deck.length}
-      </p>
+      <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground tabular-nums">
+        <p>
+          Card {index + 1} of {deck.length}
+        </p>
+        {index >= words && <p>One more look</p>}
+      </div>
       <div
         className="grid min-h-52 place-items-center gap-3 surface p-6 text-center"
         aria-live="polite"
@@ -117,7 +130,7 @@ export function Flashcards({
               variant="outline"
               className="h-10 px-4"
               disabled={saving}
-              onClick={next}
+              onClick={() => answer(word, false)}
             >
               <RotateCcw aria-hidden="true" />
               Still learning
@@ -126,7 +139,7 @@ export function Flashcards({
               type="button"
               className="h-10 px-4"
               disabled={saving}
-              onClick={() => gotIt(word.id)}
+              onClick={() => answer(word, true)}
             >
               <Check aria-hidden="true" />
               {saving ? "Saving…" : "Got it"}

@@ -1,5 +1,7 @@
 "use client"
 
+import type { LocalDate } from "@/lib/dates/local-date"
+
 import { X } from "lucide-react"
 import { useOptimistic, useState, useTransition } from "react"
 
@@ -8,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 
 import { deleteWord, setWordLearned } from "../actions"
+import { nextReviewLabel } from "../logic"
 import type { Word } from "../logic"
 
 type Change = { id: string; learned?: boolean; removed?: boolean }
@@ -16,7 +19,13 @@ type Change = { id: string; learned?: boolean; removed?: boolean }
  * The vocabulary list: mark words as learned or remove them. Controls are
  * disabled while a change saves (Next.js sends actions one at a time).
  */
-export function WordList({ words }: { words: Word[] }) {
+export function WordList({
+  words,
+  today,
+}: {
+  words: Word[]
+  today: LocalDate
+}) {
   const [items, apply] = useOptimistic(words, (current, change: Change) =>
     change.removed
       ? current.filter((w) => w.id !== change.id)
@@ -72,6 +81,11 @@ export function WordList({ words }: { words: Word[] }) {
               {w.example && (
                 <p className="text-xs break-words text-muted-foreground italic">
                   {w.example}
+                </p>
+              )}
+              {!w.learned && (
+                <p className="text-xs text-muted-foreground">
+                  {nextReviewLabel(w, today)}
                 </p>
               )}
               {w.learned && (

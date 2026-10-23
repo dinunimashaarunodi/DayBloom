@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest"
 import {
   dayMinutes,
   dayStreak,
+  isDue,
+  nextReviewDay,
+  nextReviewLabel,
   reviewDeck,
+  reviewIntervalDays,
   weekMinutes,
 } from "@/features/languages/logic"
 import {
@@ -61,21 +65,61 @@ describe("dayStreak", () => {
 
 describe("reviewDeck", () => {
   const words = [
-    { id: "a", learned: false },
-    { id: "b", learned: true },
-    { id: "c", learned: false },
-    { id: "d", learned: false },
+    { id: "a", learned: false, due_on: null },
+    { id: "b", learned: true, due_on: null },
+    { id: "c", learned: false, due_on: d("2026-10-20") },
+    { id: "d", learned: false, due_on: THU },
+    { id: "e", learned: false, due_on: d("2026-10-23") },
   ]
 
-  it("holds only words still being learned", () => {
-    const deck = reviewDeck(words)
+  it("holds unlearned words that are new or due by today", () => {
+    const deck = reviewDeck(words, THU)
     expect(deck.map((w) => w.id).sort()).toEqual(["a", "c", "d"])
   })
 
   it("shuffles with the given random source, without changing the input", () => {
     // random() = 0 always swaps each card with the first one.
-    expect(reviewDeck(words, () => 0).map((w) => w.id)).toEqual(["c", "d", "a"])
-    expect(words.map((w) => w.id)).toEqual(["a", "b", "c", "d"])
+    expect(reviewDeck(words, THU, () => 0).map((w) => w.id)).toEqual([
+      "c",
+      "d",
+      "a",
+    ])
+    expect(words.map((w) => w.id)).toEqual(["a", "b", "c", "d", "e"])
+  })
+})
+
+describe("spaced repetition", () => {
+  it("waits longer in each box", () => {
+    expect([1, 2, 3, 4, 5].map(reviewIntervalDays)).toEqual([1, 3, 7, 14, 30])
+  })
+
+  it("knows what's due and says when the next review is", () => {
+    const word = (due_on: string | null, learned = false) => ({
+      learned,
+      due_on: due_on === null ? null : d(due_on),
+    })
+    expect(isDue(word(null), THU)).toBe(true)
+    expect(isDue(word("2026-10-22"), THU)).toBe(true)
+    expect(isDue(word("2026-10-23"), THU)).toBe(false)
+    expect(isDue(word(null, true), THU)).toBe(false)
+
+    expect(nextReviewLabel(word("2026-10-01"), THU)).toBe("Due now")
+    expect(nextReviewLabel(word("2026-10-23"), THU)).toBe("Review tomorrow")
+    expect(nextReviewLabel(word("2026-10-29"), THU)).toBe("Review in 7 days")
+    expect(nextReviewLabel(word(null, true), THU)).toBeNull()
+
+    expect(
+      nextReviewDay(
+        [
+          word("2026-11-01"),
+          word("2026-10-25"),
+          word(null),
+          word("2026-10-24", true),
+        ],
+        THU,
+      ),
+    ).toBe("2026-10-25")
+    expect(nextReviewDay([word(null)], THU)).toBeNull()
   })
 })
 

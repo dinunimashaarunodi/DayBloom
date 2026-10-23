@@ -58,16 +58,20 @@ export const getLanguagesOverview = cache(async () => {
       .order("created_at", { ascending: false }),
     supabase
       .from("language_words")
-      .select("language_id, learned")
+      .select("language_id, learned, due_on")
       .eq("user_id", user.id),
   ])
   if (languages.error || practice.error || words.error) failed()
 
-  const counts = new Map<string, { words: number; learned: number }>()
+  const counts = new Map<
+    string,
+    { words: number; learned: number; due: number }
+  >()
   for (const w of words.data) {
-    const c = counts.get(w.language_id) ?? { words: 0, learned: 0 }
+    const c = counts.get(w.language_id) ?? { words: 0, learned: 0, due: 0 }
     c.words++
     if (w.learned) c.learned++
+    else if (w.due_on === null || w.due_on <= today) c.due++
     counts.set(w.language_id, c)
   }
 
@@ -75,7 +79,7 @@ export const getLanguagesOverview = cache(async () => {
     today,
     languages: (languages.data as LanguageRow[]).map((row) => ({
       ...toLanguage(row),
-      ...(counts.get(row.id) ?? { words: 0, learned: 0 }),
+      ...(counts.get(row.id) ?? { words: 0, learned: 0, due: 0 }),
     })),
     practice: practice.data as Practice[],
   }
@@ -94,7 +98,7 @@ export async function getLanguage(id: string) {
       .maybeSingle(),
     supabase
       .from("language_words")
-      .select("id, term, meaning, example, learned")
+      .select("id, term, meaning, example, learned, box, due_on")
       .eq("user_id", user.id)
       .eq("language_id", id)
       .order("created_at", { ascending: false }),

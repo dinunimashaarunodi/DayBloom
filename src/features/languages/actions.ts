@@ -185,6 +185,25 @@ export async function setWordLearned(
   return {}
 }
 
+/**
+ * Records a flashcard answer. The database schedules the next review (see
+ * the word_review_schedule migration) and may mark the word learned.
+ */
+export async function reviewWord(
+  id: string,
+  remembered: boolean,
+): Promise<{ error?: string; learned?: boolean; dueOn?: string | null }> {
+  await getCurrentUser()
+  if (!idSchema.safeParse(id).success) return { error: SAVE_ERROR }
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .rpc("review_word", { word_id: id, remembered })
+    .single()
+  if (error) return { error: SAVE_ERROR }
+  revalidateLanguages()
+  return { learned: data.learned, dueOn: data.due_on }
+}
+
 export async function deleteWord(id: string): Promise<{ error?: string }> {
   await getCurrentUser()
   if (!idSchema.safeParse(id).success) return { error: SAVE_ERROR }

@@ -441,35 +441,44 @@ export type Database = {
       }
       language_words: {
         Row: {
+          box: number
           created_at: string
+          due_on: string | null
           example: string | null
           id: string
           language_id: string
           learned: boolean
           learned_at: string | null
           meaning: string
+          reviewed_at: string | null
           term: string
           user_id: string
         }
         Insert: {
+          box?: number
           created_at?: string
+          due_on?: string | null
           example?: string | null
           id?: string
           language_id: string
           learned?: boolean
           learned_at?: string | null
           meaning: string
+          reviewed_at?: string | null
           term: string
           user_id?: string
         }
         Update: {
+          box?: number
           created_at?: string
+          due_on?: string | null
           example?: string | null
           id?: string
           language_id?: string
           learned?: boolean
           learned_at?: string | null
           meaning?: string
+          reviewed_at?: string | null
           term?: string
           user_id?: string
         }
@@ -755,6 +764,14 @@ export type Database = {
         }[]
       }
       reorder_tasks: { Args: { task_ids: string[] }; Returns: undefined }
+      review_word: {
+        Args: { remembered: boolean; word_id: string }
+        Returns: {
+          box: number
+          due_on: string
+          learned: boolean
+        }[]
+      }
       save_day_review: {
         Args: {
           p_date: string
@@ -777,6 +794,7 @@ export type Database = {
         Args: { day: string; days_mask: number; month_day: number }
         Returns: boolean
       }
+      word_review_interval: { Args: { box: number }; Returns: number }
     }
     Enums: {
       [_ in never]: never
