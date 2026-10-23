@@ -6,7 +6,7 @@ import { mkdir } from "node:fs/promises"
 import { chromium } from "@playwright/test"
 
 // The bloom gradient (globals.css: --bloom-from/via/to).
-const BLOOM = ["#0f766e", "#4338ca", "#7c3aed"]
+const BLOOM = ["#0f766e", "#047857", "#166534"]
 // lucide "sprout" (the icon in components/layout/logo.tsx), 24×24 viewBox.
 const SPROUT = `
   <path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/>

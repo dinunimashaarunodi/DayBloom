@@ -206,13 +206,15 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 
 ## Design system
 
-"Midnight bloom" (redesigned 2026-10-23 at the user's request; replaces the earlier white, forest-green look): modern, colourful and calm, never a generic admin template. Tokens live in `src/app/globals.css`. Always use the tokens; don't hard-code colours.
+"Forest bloom" (redesigned 2026-10-23 at the user's request; greens only for gradients and neutrals, no blue): modern, rich and calm, never a generic admin template. Tokens live in `src/app/globals.css`. Always use the tokens; don't hard-code colours.
 
 - **Colours:**
-  - Light: tinted page `background` #F4F6FB with two soft colour glows, white `card`, navy `foreground` #121A2E, teal `primary` #0F766E, `muted-foreground` #556079, `input` #8790A6 (3:1 for field outlines).
-  - Dark: midnight `background` #0A0F1E, `card` #111A2E, `primary` #2DD4BF.
-  - The **bloom** gradient (`bg-bloom`: teal → indigo → violet, stops `--bloom-from/via/to`) marks highlights only: the Today hero, the active nav item, the logo, avatars and the brand panel. White text on it passes AA.
+  - Light: green-tinted page `background` #F3F7F5 with two soft green glows, white `card`, deep forest `foreground` #0F2219, emerald `primary` #047857, `muted-foreground` #4D6358, `input` #82938A (3:1 for field outlines).
+  - Dark: forest-night `background` #06120D, `card` #0C1D16, `primary` #34D399. The sidebar is #05190F in both themes.
+  - The **bloom** gradient (`bg-bloom`: teal #0F766E → emerald #047857 → forest #166534, stops `--bloom-from/via/to`) marks highlights only: the Today hero, the active nav item, the logo, avatars and the brand panel. White text on it passes AA.
+  - The user asked for green gradients, not blue: keep gradients and neutrals green. Violet, sky, amber and rose appear only as module accents.
   - Run `node scripts/check-contrast.mjs` after any colour change; it checks every text/background pair and the non-text 3:1 pairs in both themes.
+  - Colours outside the tokens must match them: `app/layout.tsx` (viewport), `app/manifest.ts`, `public/offline.html` (bump `CACHE` in `public/sw.js`) and `scripts/generate-icons.mjs` (rerun it).
 - **Theme:** users choose System, Light or Dark with `ThemeSwitcher` (in the sidebar, the mobile top bar and Settings → Appearance).
   - The choice is stored per device in localStorage.
   - `THEME_SCRIPT` (`src/lib/theme.ts`) sets the `.dark` class on `<html>` before first paint.

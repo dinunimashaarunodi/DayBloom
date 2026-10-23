@@ -25,8 +25,8 @@ export const metadata: Metadata = {
 /** Browser UI colour, matching the page background in each theme. */
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0f1e" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f7f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#06120d" },
   ],
 }
 

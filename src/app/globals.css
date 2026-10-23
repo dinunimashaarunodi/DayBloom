@@ -10,9 +10,9 @@
 
 /*
  * DayBloom design system (see CLAUDE.md, "Design system").
- * "Midnight bloom": navy ink, teal for actions, an indigo-to-violet "bloom"
- * gradient for highlights, and richer module accents. Tinted backgrounds with
- * soft colour glows in light; deep midnight in dark. Contrast is checked
+ * "Forest bloom": deep green ink, emerald for actions, a teal-to-forest-green
+ * "bloom" gradient for highlights, and richer module accents. Green-tinted
+ * backgrounds with soft glows in light; deep forest night in dark. Contrast is checked
  * against WCAG AA (scripts/check-contrast.mjs).
  */
 
@@ -86,25 +86,25 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f6fb; /* cool, faintly tinted page */
-  --foreground: #121a2e; /* navy ink */
+  --background: #f3f7f5; /* faintly green-tinted page */
+  --foreground: #0f2219; /* deep forest ink */
   --card: #ffffff;
-  --card-foreground: #121a2e;
+  --card-foreground: #0f2219;
   --popover: #ffffff;
-  --popover-foreground: #121a2e;
-  --primary: #0f766e; /* teal: primary actions */
+  --popover-foreground: #0f2219;
+  --primary: #047857; /* emerald: primary actions */
   --primary-foreground: #ffffff;
-  --secondary: #e3f3f0;
-  --secondary-foreground: #0d3b37;
-  --muted: #edf0f7;
-  --muted-foreground: #556079;
-  --accent: #e8ecf8;
-  --accent-foreground: #121a2e;
+  --secondary: #dcf3e9;
+  --secondary-foreground: #064e3b;
+  --muted: #eaf2ed;
+  --muted-foreground: #4d6358;
+  --accent: #e3efe8;
+  --accent-foreground: #0f2219;
   --destructive: #c02626;
   --warning: #9a4a07;
-  --border: #e1e5ef;
-  --input: #8790a6; /* 3:1 on white, so form fields stay visible */
-  --ring: #0f766e;
+  --border: #dce7e0;
+  --input: #82938a; /* 3:1 on white, so form fields stay visible */
+  --ring: #047857;
 
   --sage: #d6f3ea;
   --sage-ink: #0b5a4f;
@@ -119,11 +119,11 @@
   --gold: #c27c0e; /* icons and accents only, never body text */
 
   --bloom-from: #0f766e;
-  --bloom-via: #4338ca;
-  --bloom-to: #7c3aed;
+  --bloom-via: #047857;
+  --bloom-to: #166534;
   --glow-strength: 10%;
 
-  --chart-1: #0f766e;
+  --chart-1: #047857;
   --chart-2: #4338ca;
   --chart-3: #7c3aed;
   --chart-4: #e8590c;
@@ -132,20 +132,20 @@
   --chart-expense: #e2580b;
 
   --shadow-soft:
-    0 1px 2px rgb(18 26 46 / 0.04), 0 4px 16px rgb(18 26 46 / 0.05);
+    0 1px 2px rgb(15 34 25 / 0.04), 0 4px 16px rgb(15 34 25 / 0.06);
   --shadow-lift:
-    0 2px 6px rgb(18 26 46 / 0.06), 0 12px 32px rgb(18 26 46 / 0.1);
+    0 2px 6px rgb(15 34 25 / 0.06), 0 12px 32px rgb(15 34 25 / 0.1);
 
   --radius: 0.75rem; /* buttons 12px, cards (radius-xl) ~17px */
 
-  --sidebar: #0b1224;
-  --sidebar-foreground: #e8ecf6;
-  --sidebar-primary: #2dd4bf;
-  --sidebar-primary-foreground: #04201d;
-  --sidebar-accent: #18223a;
-  --sidebar-accent-foreground: #e8ecf6;
-  --sidebar-border: #1f2a44;
-  --sidebar-ring: #2dd4bf;
+  --sidebar: #05190f;
+  --sidebar-foreground: #e6f2ec;
+  --sidebar-primary: #34d399;
+  --sidebar-primary-foreground: #022c1e;
+  --sidebar-accent: #0f2a1e;
+  --sidebar-accent-foreground: #e6f2ec;
+  --sidebar-border: #1a3a2b;
+  --sidebar-ring: #34d399;
 }
 
 /*
@@ -155,25 +155,25 @@
 :root.dark,
 .dark {
   color-scheme: dark;
-  --background: #0a0f1e; /* midnight */
-  --foreground: #e8ecf6;
-  --card: #111a2e;
-  --card-foreground: #e8ecf6;
-  --popover: #141e35;
-  --popover-foreground: #e8ecf6;
-  --primary: #2dd4bf;
-  --primary-foreground: #04201d;
-  --secondary: #11302c;
-  --secondary-foreground: #d4f5ee;
-  --muted: #18223a;
-  --muted-foreground: #9aa5c0;
-  --accent: #1c2742;
-  --accent-foreground: #e8ecf6;
+  --background: #06120d; /* deep forest night */
+  --foreground: #e6f2ec;
+  --card: #0c1d16;
+  --card-foreground: #e6f2ec;
+  --popover: #0f241b;
+  --popover-foreground: #e6f2ec;
+  --primary: #34d399;
+  --primary-foreground: #022c1e;
+  --secondary: #0e3326;
+  --secondary-foreground: #d1fae5;
+  --muted: #12291f;
+  --muted-foreground: #93ab9f;
+  --accent: #143026;
+  --accent-foreground: #e6f2ec;
   --destructive: #f87171;
   --warning: #fbbf24;
-  --border: #222d48;
-  --input: #66749a;
-  --ring: #2dd4bf;
+  --border: #1b392c;
+  --input: #5f7d6f;
+  --ring: #34d399;
 
   --sage: #0f3a35;
   --sage-ink: #86ecd8;
@@ -188,11 +188,11 @@
   --gold: #fbbf24;
 
   --bloom-from: #0f766e;
-  --bloom-via: #4338ca;
-  --bloom-to: #6d28d9;
+  --bloom-via: #047857;
+  --bloom-to: #166534;
   --glow-strength: 18%;
 
-  --chart-1: #2dd4bf;
+  --chart-1: #34d399;
   --chart-2: #818cf8;
   --chart-3: #a78bfa;
   --chart-4: #fb923c;
@@ -203,14 +203,14 @@
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.2);
   --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.35), 0 16px 40px rgb(0 0 0 / 0.3);
 
-  --sidebar: #0b1224;
-  --sidebar-foreground: #e8ecf6;
-  --sidebar-primary: #2dd4bf;
-  --sidebar-primary-foreground: #04201d;
-  --sidebar-accent: #18223a;
-  --sidebar-accent-foreground: #e8ecf6;
-  --sidebar-border: #1f2a44;
-  --sidebar-ring: #2dd4bf;
+  --sidebar: #05190f;
+  --sidebar-foreground: #e6f2ec;
+  --sidebar-primary: #34d399;
+  --sidebar-primary-foreground: #022c1e;
+  --sidebar-accent: #0f2a1e;
+  --sidebar-accent-foreground: #e6f2ec;
+  --sidebar-border: #1a3a2b;
+  --sidebar-ring: #34d399;
 }
 
 /* A card: thin border, soft layered shadow. */

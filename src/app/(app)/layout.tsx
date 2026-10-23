@@ -22,24 +22,28 @@ import { cn } from "@/lib/utils"
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-1">
-      <aside className="dark sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-5 overflow-y-auto bg-sidebar bg-[radial-gradient(120%_60%_at_0%_0%,color-mix(in_oklab,var(--bloom-via)_28%,transparent),transparent_70%)] px-3 py-5 text-sidebar-foreground md:flex">
-        <div className="px-3 pt-1">
+      <aside className="dark sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-4 bg-sidebar bg-[radial-gradient(120%_60%_at_0%_0%,color-mix(in_oklab,var(--bloom-via)_28%,transparent),transparent_70%)] px-3 py-5 text-sidebar-foreground md:flex">
+        <div className="shrink-0 px-3 pt-1">
           <Logo href="/today" />
         </div>
-        <nav aria-label="Main">
+        {/* Only the links scroll on short windows; the profile card stays put. */}
+        <nav
+          aria-label="Main"
+          className="-mx-1 min-h-0 flex-1 [scrollbar-width:thin] overflow-y-auto px-1"
+        >
           <Suspense
             fallback={<MainNavLinks variant="sidebar" pathname={null} />}
           >
             <MainNav variant="sidebar" />
           </Suspense>
         </nav>
-        <div className="mt-auto grid gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/60 p-3">
-          <Suspense fallback={<Skeleton className="h-9" />}>
+        <div className="grid shrink-0 gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/70 p-3">
+          <Suspense fallback={<Skeleton className="h-10" />}>
             <UserSummary />
           </Suspense>
-          <div className="flex items-center justify-between gap-2">
-            <SignOutButton />
+          <div className="flex items-center justify-between gap-2 border-t border-sidebar-border pt-3">
             <ThemeSwitcher />
+            <SignOutButton compact />
           </div>
         </div>
       </aside>
