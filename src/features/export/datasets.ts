@@ -6,6 +6,7 @@ import type { CsvValue } from "./csv"
 export const ALL_TABLES = [
   "profiles",
   "tasks",
+  "task_series",
   "events",
   "days",
   "habits",

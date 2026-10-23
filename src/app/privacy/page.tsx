@@ -45,12 +45,13 @@ export default function PrivacyPage() {
               and ends at your midnight, and your currency if you use Finance.
             </li>
             <li>
-              <strong>What you create:</strong> tasks, calendar events, daily
-              reflections (mood, energy and notes) and the daily history built
-              from them, income and expenses with their categories and budgets,
-              habits with their check-ins, focus sessions, workouts, goals with
-              their milestones, language practice and vocabulary, and journal
-              entries. Deleting a journal entry removes it immediately.
+              <strong>What you create:</strong> tasks and repeating tasks,
+              calendar events, daily reflections (mood, energy and notes) and
+              the daily history built from them, income and expenses with their
+              categories and budgets, habits with their check-ins, focus
+              sessions, workouts, goals with their milestones, language practice
+              and vocabulary, and journal entries. Deleting a journal entry
+              removes it immediately.
             </li>
             <li>
               <strong>On your device:</strong> your theme choice, and (if you

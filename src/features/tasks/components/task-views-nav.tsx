@@ -8,6 +8,7 @@ const VIEWS: { view: TaskView; label: string }[] = [
   { view: "today", label: "Today" },
   { view: "upcoming", label: "Upcoming" },
   { view: "someday", label: "No date" },
+  { view: "repeating", label: "Repeating" },
   { view: "done", label: "Done" },
 ]
 

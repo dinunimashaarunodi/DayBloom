@@ -13,7 +13,11 @@ import { getEvents } from "@/features/calendar/queries"
 import { parseCalendarView } from "@/features/calendar/schema"
 import { TaskList } from "@/features/tasks/components/task-list"
 import type { Task } from "@/features/tasks/logic"
-import { getTasksInRange, getUserToday } from "@/features/tasks/queries"
+import {
+  ensureRepeatingTasks,
+  getTasksInRange,
+  getUserToday,
+} from "@/features/tasks/queries"
 import {
   addDays,
   addMonths,
@@ -56,6 +60,7 @@ async function CalendarContent({
   const from = days[0]
   const to = days[days.length - 1]
 
+  await ensureRepeatingTasks()
   const [tasks, events] = await Promise.all([
     getTasksInRange(from, to),
     getEvents(from, to, timezone),

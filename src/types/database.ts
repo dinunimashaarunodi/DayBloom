@@ -540,6 +540,51 @@ export type Database = {
         }
         Relationships: []
       }
+      task_series: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          days_mask: number | null
+          ends_on: string | null
+          id: string
+          month_day: number | null
+          notes: string | null
+          priority: string
+          starts_on: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          days_mask?: number | null
+          ends_on?: string | null
+          id?: string
+          month_day?: number | null
+          notes?: string | null
+          priority?: string
+          starts_on: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          days_mask?: number | null
+          ends_on?: string | null
+          id?: string
+          month_day?: number | null
+          notes?: string | null
+          priority?: string
+          starts_on?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed_at: string | null
@@ -548,8 +593,10 @@ export type Database = {
           due_date: string | null
           id: string
           notes: string | null
+          occurs_on: string | null
           position: number
           priority: string
+          series_id: string | null
           status: string
           times_moved: number
           title: string
@@ -563,8 +610,10 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          occurs_on?: string | null
           position?: number
           priority?: string
+          series_id?: string | null
           status?: string
           times_moved?: number
           title: string
@@ -578,15 +627,25 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          occurs_on?: string | null
           position?: number
           priority?: string
+          series_id?: string | null
           status?: string
           times_moved?: number
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_series_fkey"
+            columns: ["series_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "task_series"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -686,6 +745,7 @@ export type Database = {
       current_local_date: { Args: never; Returns: string }
       delete_my_account: { Args: never; Returns: undefined }
       ensure_default_finance_categories: { Args: never; Returns: undefined }
+      ensure_repeating_tasks: { Args: never; Returns: number }
       my_achievements: {
         Args: never
         Returns: {
@@ -712,6 +772,10 @@ export type Database = {
           p_starts_on: string
         }
         Returns: undefined
+      }
+      task_series_occurs_on: {
+        Args: { day: string; days_mask: number; month_day: number }
+        Returns: boolean
       }
     }
     Enums: {

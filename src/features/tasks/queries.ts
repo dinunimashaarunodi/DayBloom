@@ -8,6 +8,7 @@ import { localDayRange, todayIn, type LocalDate } from "@/lib/dates/local-date"
 import { createClient } from "@/lib/supabase/server"
 
 import { TASK_COLUMNS, type Task } from "./logic"
+import { SERIES_COLUMNS, type TaskSeries } from "./repeat"
 import type { TaskView } from "./schema"
 
 /** The signed-in user's calendar day, in their profile timezone. */
@@ -22,6 +23,52 @@ export const getUserToday = cache(async () => {
 
 function failed(): never {
   throw new Error("We couldn't load your tasks.")
+}
+
+/**
+ * Creates today's tasks from repeating tasks (lazy, idempotent: at most one
+ * per series per day). Run before reading tasks. A failure isn't fatal: the
+ * page still shows everything else, and the next load tries again.
+ */
+export const ensureRepeatingTasks = cache(async (): Promise<void> => {
+  await getCurrentUser()
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("ensure_repeating_tasks")
+  if (error) console.error("ensure_repeating_tasks failed", error.message)
+})
+
+type SeriesRow = Omit<TaskSeries, "archived"> & { archived_at: string | null }
+
+function toSeries({ archived_at, ...row }: SeriesRow): TaskSeries {
+  return { ...row, archived: archived_at !== null } as TaskSeries
+}
+
+/** All repeating tasks, active ones first, then by title. */
+export async function getSeriesList(): Promise<TaskSeries[]> {
+  const user = await getCurrentUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("task_series")
+    .select(SERIES_COLUMNS)
+    .eq("user_id", user.id)
+    .order("archived_at", { nullsFirst: true })
+    .order("title")
+  if (error) failed()
+  return (data as unknown as SeriesRow[]).map(toSeries)
+}
+
+/** One repeating task, or null. */
+export async function getSeries(id: string): Promise<TaskSeries | null> {
+  const user = await getCurrentUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("task_series")
+    .select(SERIES_COLUMNS)
+    .eq("user_id", user.id)
+    .eq("id", id)
+    .maybeSingle()
+  if (error) failed()
+  return data ? toSeries(data as unknown as SeriesRow) : null
 }
 
 // Supabase types `date` columns as string; they are always "YYYY-MM-DD".

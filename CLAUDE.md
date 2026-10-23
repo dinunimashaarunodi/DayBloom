@@ -14,28 +14,29 @@ Anyone can sign up, and each user sees only their own data.
   - Prod auth was pushed from a temporary copy of `config.toml` (`config push --project-ref <prod> --workdir <tmp>`), auth service only.
 - Still waiting on: Resend SMTP (needs a verified domain).
 
-**Phase 16 (data export) is built and all automated checks pass. Waiting for the user's approval.** The user asked for every postponed feature that needs no paid service, one phase at a time (order below). No new migrations since 2026-10-23. Update this line whenever a phase is completed and verified.
+**Phase 17 (repeating tasks) is built and all automated checks pass on dev. Waiting for the user's approval.** The user asked for every postponed feature that needs no paid service, one phase at a time (order below). The `repeating_tasks` migration (`20261023031113`) is on dev only; push it to prod before deploying. Update this line whenever a phase is completed and verified.
 
-| Phase | Scope                                                                                                                                                 | Status |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                                                                              | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                                                              | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                                                                              | ✅     |
-| 3     | Tasks and Today page                                                                                                                                  | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                                                                                 | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                                                                                   | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                                                                 | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                                                                          | ✅     |
-| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                                                                             | ✅     |
-| 9     | Journal: entries per local day, search, Today card, entries on History days                                                                           | ✅     |
-| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                                                                                   | ✅     |
-| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card                                                               | ✅     |
-| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                                                                      | ✅     |
-| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                                                                         | ✅     |
-| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card                                                           | ✅     |
-| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help                                                       | ✅     |
-| 16    | Data export: everything as JSON, seven CSV datasets, from Settings → Your data                                                                        | ✅     |
-| 17+   | Free postponed features: repeating tasks → smarter flashcards (SRS) → calendar drag-and-drop → reminders (Web Push) → multi-currency → offline writes |        |
+| Phase | Scope                                                                                                                               | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                                                            | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                                            | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                                                            | ✅     |
+| 3     | Tasks and Today page                                                                                                                | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                                                               | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                                                                 | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                                               | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                                                        | ✅     |
+| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                                                           | ✅     |
+| 9     | Journal: entries per local day, search, Today card, entries on History days                                                         | ✅     |
+| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                                                                 | ✅     |
+| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card                                             | ✅     |
+| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                                                    | ✅     |
+| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                                                       | ✅     |
+| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card                                         | ✅     |
+| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help                                     | ✅     |
+| 16    | Data export: everything as JSON, seven CSV datasets, from Settings → Your data                                                      | ✅     |
+| 17    | Repeating tasks: daily, chosen weekdays or monthly; today's copy created lazily; Repeating tab                                      | ✅     |
+| 18+   | Free postponed features: smarter flashcards (SRS) → calendar drag-and-drop → reminders (Web Push) → multi-currency → offline writes |        |
 
 Still postponed: Google Calendar sync (free, but needs the user to create Google OAuth credentials), Resend SMTP (needs a domain), leaked-password protection (paid Supabase plan).
 
@@ -121,6 +122,10 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - Do it today
   - Choose a date
   - Let it go (sets the status to `dropped`)
+- **Repeating tasks** (`task_series`, `features/tasks/repeat.ts`): a rule is either `days_mask` (weekdays) or `month_day` (29–31 fall on the last day of shorter months).
+  - `ensure_repeating_tasks()` (SECURITY INVOKER) creates today's occurrence as an ordinary task, once per series per day (`unique (series_id, occurs_on)`). Call `ensureRepeatingTasks()` before reading tasks (Today, Tasks, Calendar).
+  - Only today's occurrence is ever created: no backfilling of missed days and no future copies. Unfinished ones go through "Needs a decision" like any task.
+  - `occursOn()` must match `task_series_occurs_on()` (a DB test compares them). Editing a series affects future days only; series are stopped (archived), never deleted.
 - Never add snooze or postpone shortcuts. Warn the user when `times_moved >= 2`.
   - `times_moved` is maintained by a trigger: it counts moving an unfinished, dated task later or removing its date. Clients can't write it.
   - Tasks have no hard delete: "Delete" sets `deleted_at`, and "Let it go" sets status `dropped`.

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, Repeat } from "lucide-react"
 import Link from "next/link"
 import { useOptimistic, useState, useTransition } from "react"
 
@@ -88,15 +88,24 @@ export function TaskList({
                 aria-label={`${done ? "Mark as not done" : "Mark as done"}: ${task.title}`}
               />
               <div className="grid min-w-0 flex-1 gap-0.5">
-                <Link
-                  href={`/tasks/${task.id}`}
-                  className={cn(
-                    "truncate rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50",
-                    done && "text-muted-foreground line-through",
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <Link
+                    href={`/tasks/${task.id}`}
+                    className={cn(
+                      "truncate rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50",
+                      done && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {task.title}
+                  </Link>
+                  {task.series_id && (
+                    <Repeat
+                      className="size-3.5 shrink-0 text-muted-foreground"
+                      aria-label="Repeating task"
+                      role="img"
+                    />
                   )}
-                >
-                  {task.title}
-                </Link>
+                </div>
                 {(showDue ||
                   task.priority !== "normal" ||
                   shouldWarnAboutMoves(task)) && (

@@ -27,7 +27,12 @@ import { NeedsDecisionCard } from "@/features/tasks/components/needs-decision-ca
 import { QuickAddTask } from "@/features/tasks/components/quick-add-task"
 import { TaskList } from "@/features/tasks/components/task-list"
 import { dueLabel } from "@/features/tasks/logic"
-import { getTasks, getTodayTasks, getUserToday } from "@/features/tasks/queries"
+import {
+  ensureRepeatingTasks,
+  getTasks,
+  getTodayTasks,
+  getUserToday,
+} from "@/features/tasks/queries"
 import { QuickActions } from "@/features/today/components/quick-actions"
 import { TodayHero } from "@/features/today/components/today-hero"
 import {
@@ -67,6 +72,8 @@ async function Today() {
   const [{ today, timezone }, profile] = await Promise.all([
     getUserToday(),
     getProfile(),
+    // Today's repeating tasks must exist before the task lists load.
+    ensureRepeatingTasks(),
   ])
   const [{ overdue, planned, done }, events, day, upcoming, { habits }, focus] =
     await Promise.all([

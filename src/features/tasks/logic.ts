@@ -16,11 +16,13 @@ export type Task = {
   due_date: LocalDate | null
   completed_at: string | null
   times_moved: number
+  /** Set when the task is an occurrence of a repeating task. */
+  series_id?: string | null
 }
 
 /** Columns selected for a Task. Keep in sync with the Task type. */
 export const TASK_COLUMNS =
-  "id, title, notes, status, priority, due_date, completed_at, times_moved" as const
+  "id, title, notes, status, priority, due_date, completed_at, times_moved, series_id" as const
 
 /** From this many postponements on, gently suggest breaking it down or letting it go. */
 export const MOVE_WARNING_THRESHOLD = 2
