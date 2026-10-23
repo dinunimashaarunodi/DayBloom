@@ -29,7 +29,8 @@ export default function PrivacyPage() {
           <p>
             DayBloom is a personal space for planning your days and noticing
             your progress. Your data is yours. We collect only what the app
-            needs to work, we never sell it, and you can delete it at any time.
+            needs to work, we never sell it, and you can download or delete it
+            at any time.
           </p>
         </header>
 
@@ -84,6 +85,14 @@ export default function PrivacyPage() {
           <p>
             We email you only for your account: confirming your address and
             resetting your password.
+          </p>
+        </PrivacySection>
+
+        <PrivacySection title="Downloading your data">
+          <p>
+            In Settings, under &ldquo;Your data&rdquo;, you can download
+            everything you have stored as one JSON file, or parts of it as CSV
+            files for spreadsheets. Only you can download your data.
           </p>
         </PrivacySection>
 

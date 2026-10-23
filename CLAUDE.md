@@ -14,29 +14,30 @@ Anyone can sign up, and each user sees only their own data.
   - Prod auth was pushed from a temporary copy of `config.toml` (`config push --project-ref <prod> --workdir <tmp>`), auth service only.
 - Still waiting on: Resend SMTP (needs a verified domain).
 
-**Phase 15 (installable PWA) is built and all automated checks pass. Waiting for the user's approval.** Prod has every migration (pushed 2026-10-23), so the code can be deployed; the Next.js 16.4.2 security upgrade ships with it. Web Push stays postponed. Update this line whenever a phase is completed and verified.
+**Phase 16 (data export) is built and all automated checks pass. Waiting for the user's approval.** The user asked for every postponed feature that needs no paid service, one phase at a time (order below). No new migrations since 2026-10-23. Update this line whenever a phase is completed and verified.
 
-| Phase | Scope                                                                                           | Status |
-| ----- | ----------------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                        | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                        | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                        | ✅     |
-| 3     | Tasks and Today page                                                                            | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                           | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                             | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                           | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                    | ✅     |
-| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                       | ✅     |
-| 9     | Journal: entries per local day, search, Today card, entries on History days                     | ✅     |
-| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                             | ✅     |
-| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card         | ✅     |
-| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                | ✅     |
-| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                   | ✅     |
-| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card     | ✅     |
-| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help | ✅     |
+| Phase | Scope                                                                                                                                                 | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                                                                              | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                                                              | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                                                                              | ✅     |
+| 3     | Tasks and Today page                                                                                                                                  | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                                                                                 | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                                                                                   | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                                                                 | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                                                                          | ✅     |
+| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                                                                             | ✅     |
+| 9     | Journal: entries per local day, search, Today card, entries on History days                                                                           | ✅     |
+| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                                                                                   | ✅     |
+| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card                                                               | ✅     |
+| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                                                                      | ✅     |
+| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                                                                         | ✅     |
+| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card                                                           | ✅     |
+| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help                                                       | ✅     |
+| 16    | Data export: everything as JSON, seven CSV datasets, from Settings → Your data                                                                        | ✅     |
+| 17+   | Free postponed features: repeating tasks → smarter flashcards (SRS) → calendar drag-and-drop → reminders (Web Push) → multi-currency → offline writes |        |
 
-Postponed until the MVP is stable: recurrence, Google Calendar sync, Web Push, offline writes,
-spaced-repetition (SRS) algorithms, multi-currency, export, drag-and-drop calendar editing.
+Still postponed: Google Calendar sync (free, but needs the user to create Google OAuth credentials), Resend SMTP (needs a domain), leaked-password protection (paid Supabase plan).
 
 ## Stack and architecture
 
@@ -159,6 +160,9 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
 - **Languages** (`features/languages`): languages are archived, never deleted; one per name per user (case-insensitive).
   - Practice entries belong to a local day (never future). The day streak counts days with any practice; today without practice doesn't break it.
   - Words have a `learned` flag (trigger stamps `learned_at`). Review is a shuffled flashcard deck of unlearned words, with no SRS scheduling yet. The deck is shuffled on the server and kept for the session.
+- **Export** (`features/export`, route `app/export/route.ts`): `/export` returns everything as JSON; `/export?dataset=<key>` one CSV from `CSV_DATASETS`.
+  - Reads page through `fetchAll` (PostgREST caps responses at 1000 rows) and filter by `user_id` on top of RLS. Responses are `no-store`.
+  - `csvCell` neutralises formula-like text (CSV injection). New tables must be added to `ALL_TABLES`.
 - **Achievements** (`features/achievements`): derived, never stored.
   - `my_achievements()` (SQL, SECURITY INVOKER) returns each code's progress and target from the caller's data. Copy lives in `definitions.ts`; a DB test keeps the codes in sync. Add new ones to both.
   - `achievement_seen` only records which unlocked ones were seen. Marking them seen must not revalidate, or the open page loses its "New" labels.

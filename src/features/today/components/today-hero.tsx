@@ -13,7 +13,6 @@ import Link from "next/link"
 import type * as React from "react"
 
 import { ProgressRing } from "@/components/progress-ring"
-import { cn } from "@/lib/utils"
 
 import type { NextStep } from "../logic"
 
@@ -29,6 +28,43 @@ function Stat({
       <Icon className="size-4 shrink-0 opacity-90" aria-hidden="true" />
       <span className="truncate">{children}</span>
     </li>
+  )
+}
+
+function Ring({
+  done,
+  total,
+  size,
+  className,
+}: {
+  done: number
+  total: number
+  size: number
+  className?: string
+}) {
+  return (
+    <ProgressRing
+      value={done}
+      max={total}
+      size={size}
+      stroke={size > 90 ? 10 : 8}
+      label="Today's tasks completed"
+      className={`text-white ${className ?? ""}`}
+      trackClassName="stroke-white/20"
+    >
+      <span className="grid leading-tight text-white">
+        <span
+          className={
+            size > 90
+              ? "text-2xl font-semibold tabular-nums"
+              : "text-lg font-semibold tabular-nums"
+          }
+        >
+          {total === 0 ? "–" : `${Math.round((done / total) * 100)}%`}
+        </span>
+        <span className="text-[10px] text-white/80">of today</span>
+      </span>
+    </ProgressRing>
   )
 }
 
@@ -63,7 +99,7 @@ export function TodayHero({
   return (
     <section
       aria-labelledby="today-title"
-      className="relative isolate overflow-hidden rounded-3xl bg-bloom p-5 shadow-lift sm:p-7"
+      className="relative isolate overflow-hidden rounded-3xl bg-bloom p-4 shadow-lift sm:p-7"
     >
       {/* Soft light blooms, purely decorative. */}
       <div
@@ -75,62 +111,50 @@ export function TodayHero({
         className="absolute -bottom-28 -left-10 -z-10 size-64 rounded-full bg-white/10 blur-3xl"
       />
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid min-w-0 gap-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="grid min-w-0 gap-1.5 sm:gap-3">
           <p className="text-sm font-medium text-white/85">{date}</p>
           <h1
             id="today-title"
-            className="text-3xl font-semibold tracking-tight text-white md:text-4xl"
+            className="text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-4xl"
           >
             {title}
           </h1>
-          <p className="text-white/90">{message}</p>
-          <ul aria-label="Today at a glance" className="flex flex-wrap gap-2">
-            <Stat icon={CircleCheck}>
-              {done} of {total} task{total === 1 ? "" : "s"} done
-            </Stat>
-            {habits.scheduled > 0 && (
-              <Stat icon={Repeat}>
-                {habits.done} of {habits.scheduled} habit
-                {habits.scheduled === 1 ? "" : "s"}
-              </Stat>
-            )}
-            {focusMinutes && <Stat icon={Timer}>{focusMinutes} focused</Stat>}
-            {nextEvent && <Stat icon={CalendarClock}>{nextEvent}</Stat>}
-          </ul>
+          <p className="text-sm text-white/90 sm:text-base">{message}</p>
         </div>
+        {/* A smaller ring on phones keeps the hero short. */}
+        <Ring done={done} total={total} size={76} className="sm:hidden" />
+        <Ring done={done} total={total} size={112} className="max-sm:hidden" />
+      </div>
 
-        <div className="flex items-center gap-4 lg:flex-col lg:items-end">
-          <ProgressRing
-            value={done}
-            max={total}
-            label="Today's tasks completed"
-            className="text-white"
-            trackClassName="stroke-white/20"
-          >
-            <span className="grid leading-tight text-white">
-              <span className="text-2xl font-semibold tabular-nums">
-                {total === 0 ? "–" : `${Math.round((done / total) * 100)}%`}
-              </span>
-              <span className="text-[11px] text-white/80">of today</span>
-            </span>
-          </ProgressRing>
+      <ul
+        aria-label="Today at a glance"
+        className="mt-4 flex flex-wrap gap-2 sm:mt-5"
+      >
+        <Stat icon={CircleCheck}>
+          {done} of {total} task{total === 1 ? "" : "s"} done
+        </Stat>
+        {habits.scheduled > 0 && (
+          <Stat icon={Repeat}>
+            {habits.done} of {habits.scheduled} habit
+            {habits.scheduled === 1 ? "" : "s"}
+          </Stat>
+        )}
+        {focusMinutes && <Stat icon={Timer}>{focusMinutes} focused</Stat>}
+        {nextEvent && <Stat icon={CalendarClock}>{nextEvent}</Stat>}
+        <li>
           <Link
             href="/tasks?view=upcoming"
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-white/12 px-4 text-sm font-medium text-white ring-1 ring-white/25 transition-colors outline-none hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/70"
+            className="inline-flex h-8.5 items-center gap-1.5 rounded-full bg-white px-3 text-sm font-medium text-bloom-via shadow-sm transition-transform outline-none hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-white/70"
           >
             <CalendarPlus className="size-4" aria-hidden="true" />
             Plan tomorrow
           </Link>
-        </div>
-      </div>
+        </li>
+      </ul>
 
-      <div
-        className={cn(
-          "mt-6 flex flex-col gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 sm:flex-row sm:items-center",
-        )}
-      >
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/15">
+      <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-white/10 p-3.5 ring-1 ring-white/15 sm:mt-6 sm:flex-row sm:items-center sm:p-4">
+        <span className="hidden size-10 shrink-0 place-items-center rounded-xl bg-white/15 sm:grid">
           {nextStep.key === "done" ? (
             <Sparkles className="size-5" aria-hidden="true" />
           ) : (

@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { DeleteAccountForm } from "@/features/auth/components/delete-account-form"
 import { SignOutButton } from "@/features/auth/components/sign-out-button"
+import { ExportData } from "@/features/export/components/export-data"
 import { ProfileForm } from "@/features/profile/components/profile-form"
 import { getProfile } from "@/features/profile/queries"
 import { listTimeZones } from "@/lib/dates/timezone"
@@ -68,6 +69,21 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <InstallApp />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>Your data</h2>
+            </CardTitle>
+            <CardDescription>
+              Download a copy of everything you&apos;ve saved in DayBloom. It
+              stays yours.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExportData />
           </CardContent>
         </Card>
 

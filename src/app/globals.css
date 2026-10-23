@@ -259,6 +259,20 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /*
+   * On phones the top bar and floating tab bar cover the edges of the screen;
+   * keep focused or scrolled-to elements clear of them.
+   */
+  html {
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: 7rem;
+  }
+  @media (width >= 48rem) {
+    html {
+      scroll-padding-top: 1.5rem;
+      scroll-padding-bottom: 1.5rem;
+    }
+  }
   body {
     @apply bg-background text-foreground;
     /* Two soft colour glows behind everything; stronger in dark. */
