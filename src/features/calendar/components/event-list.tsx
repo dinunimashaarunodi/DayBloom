@@ -4,6 +4,7 @@ import Link from "next/link"
 import type { LocalDate } from "@/lib/dates/local-date"
 
 import { eventTimeLabel, type CalendarEvent } from "../logic"
+import { DraggableEvent } from "./calendar-dnd"
 
 /**
  * A day's events with their times as seen on that day.
@@ -15,12 +16,15 @@ export function EventList({
   timezone,
   label,
   linked = true,
+  draggable = false,
 }: {
   events: CalendarEvent[]
   day: LocalDate
   timezone: string
   label: string
   linked?: boolean
+  /** Inside <CalendarDnd>: events can be dragged to another day. */
+  draggable?: boolean
 }) {
   return (
     <ul aria-label={label} className="divide-y overflow-hidden surface">
@@ -39,7 +43,16 @@ export function EventList({
         )
         return (
           <li key={event.id}>
-            {linked ? (
+            {linked && draggable ? (
+              <DraggableEvent id={event.id} from={day} className="block">
+                <Link
+                  href={`/calendar/events/${event.id}`}
+                  className="flex items-center gap-3 px-3 py-2.5 outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+                >
+                  {content}
+                </Link>
+              </DraggableEvent>
+            ) : linked ? (
               <Link
                 href={`/calendar/events/${event.id}`}
                 className="flex items-center gap-3 px-3 py-2.5 outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"

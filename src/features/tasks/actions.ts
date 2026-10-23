@@ -56,6 +56,32 @@ export async function createTask(
 /** For buttons/checkboxes called from Client Components. */
 export type MutationResult = { error?: string }
 
+/**
+ * Adds a task whose id was chosen on the device (a task added while offline).
+ * Sending it again is harmless: an id that already exists is ignored.
+ */
+export async function createTaskWithId(
+  id: string,
+  title: string,
+  dueDate: string | null,
+): Promise<MutationResult> {
+  await getCurrentUser()
+  const parsed = createTaskSchema.safeParse({ title, dueDate: dueDate ?? "" })
+  if (!taskIdSchema.safeParse(id).success || !parsed.success) {
+    return { error: SAVE_ERROR }
+  }
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("tasks")
+    .upsert(
+      { id, title: parsed.data.title, due_date: parsed.data.dueDate },
+      { onConflict: "id", ignoreDuplicates: true },
+    )
+  if (error) return { error: SAVE_ERROR }
+  revalidateTaskPages()
+  return {}
+}
+
 export async function setTaskDone(
   id: string,
   done: boolean,

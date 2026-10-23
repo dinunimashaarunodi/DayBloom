@@ -193,6 +193,36 @@ describe("tasks: RLS, trigger rules and helpers", () => {
     })
   })
 
+  describe("tasks added offline (id chosen on the device)", () => {
+    it("adds the task once, however often it is sent", async () => {
+      const id = crypto.randomUUID()
+      const send = () =>
+        asAlice
+          .from("tasks")
+          .upsert(
+            { id, title: "Buy bread" },
+            { onConflict: "id", ignoreDuplicates: true },
+          )
+      expect((await send()).error).toBeNull()
+      expect((await send()).error).toBeNull()
+      const { data } = await asAlice.from("tasks").select("title").eq("id", id)
+      expect(data).toEqual([{ title: "Buy bread" }])
+
+      // Someone else re-using that id changes nothing.
+      await asBob
+        .from("tasks")
+        .upsert(
+          { id, title: "Hijacked" },
+          { onConflict: "id", ignoreDuplicates: true },
+        )
+      const { data: after } = await adminClient()
+        .from("tasks")
+        .select("title, user_id")
+        .eq("id", id)
+      expect(after).toEqual([{ title: "Buy bread", user_id: alice.id }])
+    })
+  })
+
   describe("reorder_tasks", () => {
     it("orders the caller's tasks and ignores other users' ids", async () => {
       const [a, b, c] = await Promise.all(

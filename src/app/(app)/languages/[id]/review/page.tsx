@@ -47,15 +47,18 @@ async function Review({
       <BackLink href={back} label={detail.language.name} />
       <PageHeader title="Review words" description={detail.language.name} />
       <div className="max-w-xl">
-        {deck.length === 0 ? (
-          <EmptyState icon={BookOpen} accent="lavender" title="All caught up">
-            {next
-              ? `Nothing is due today. Your next review is on ${formatLocalDate(next, "long")}.`
-              : "There's nothing left to review. Add new words as you meet them."}
-          </EmptyState>
-        ) : (
-          <Flashcards deck={deck} backHref={back} />
-        )}
+        {/* Flashcards keeps its own deck, so a refresh mid-review can't swap it out. */}
+        <Flashcards
+          deck={deck}
+          backHref={back}
+          empty={
+            <EmptyState icon={BookOpen} accent="lavender" title="All caught up">
+              {next
+                ? `Nothing is due today. Your next review is on ${formatLocalDate(next, "long")}.`
+                : "There's nothing left to review. Add new words as you meet them."}
+            </EmptyState>
+          }
+        />
       </div>
     </>
   )

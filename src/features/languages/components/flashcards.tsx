@@ -2,6 +2,7 @@
 
 import { Check, Eye, PartyPopper, RotateCcw } from "lucide-react"
 import Link from "next/link"
+import type * as React from "react"
 import { useState, useTransition } from "react"
 
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -19,9 +20,12 @@ import type { Word } from "../logic"
 export function Flashcards({
   deck: initialDeck,
   backHref,
+  empty,
 }: {
   deck: Word[]
   backHref: string
+  /** Shown when nothing was due when the review opened. */
+  empty: React.ReactNode
 }) {
   // Keep this session's deck: each answer revalidates the page, which must
   // not change the cards mid-review.
@@ -33,8 +37,10 @@ export function Flashcards({
   const [saving, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
+  // The session's own count: answering revalidates the page, and the server
+  // then sends a smaller (eventually empty) deck that must not end the review.
+  const [words] = useState(initialDeck.length)
   const word = deck[index]
-  const words = initialDeck.length
 
   function answer(card: Word, remembered: boolean) {
     startTransition(async () => {
@@ -58,6 +64,8 @@ export function Flashcards({
       setIndex((i) => i + 1)
     })
   }
+
+  if (words === 0) return empty
 
   if (!word) {
     return (

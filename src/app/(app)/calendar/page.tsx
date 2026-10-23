@@ -6,6 +6,10 @@ import { Section } from "@/components/layout/section"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CalendarToolbar } from "@/features/calendar/components/calendar-toolbar"
+import {
+  CalendarDnd,
+  DropDay,
+} from "@/features/calendar/components/calendar-dnd"
 import { EventList } from "@/features/calendar/components/event-list"
 import { MonthGrid } from "@/features/calendar/components/month-grid"
 import { groupByDay, type CalendarDay } from "@/features/calendar/logic"
@@ -92,20 +96,22 @@ async function CalendarContent({
         }
         next={view === "month" ? addMonths(selected, 1) : addDays(selected, 7)}
       />
-      {view === "month" ? (
-        <div className="grid gap-6">
-          <MonthGrid
-            weeks={weeks}
-            month={selected}
-            selected={selected}
-            today={today}
-            days={byDay}
-          />
-          {agenda(selected)}
-        </div>
-      ) : (
-        <div className="grid gap-6">{days.map(agenda)}</div>
-      )}
+      <CalendarDnd>
+        {view === "month" ? (
+          <div className="grid gap-6">
+            <MonthGrid
+              weeks={weeks}
+              month={selected}
+              selected={selected}
+              today={today}
+              days={byDay}
+            />
+            {agenda(selected)}
+          </div>
+        ) : (
+          <div className="grid gap-6">{days.map(agenda)}</div>
+        )}
+      </CalendarDnd>
     </>
   )
 }
@@ -126,37 +132,40 @@ function DayAgenda({
   const empty = items.events.length === 0 && items.tasks.length === 0
 
   return (
-    <Section
-      id={`day-${day}`}
-      title={
-        <span className="flex items-center gap-2">
-          {name}
-          {day === today && <Badge variant="secondary">Today</Badge>}
-        </span>
-      }
-    >
-      {empty ? (
-        <p className="text-sm text-muted-foreground">Nothing planned.</p>
-      ) : (
-        <div className="grid gap-2">
-          {items.events.length > 0 && (
-            <EventList
-              label={`Events on ${name}`}
-              events={items.events}
-              day={day}
-              timezone={timezone}
-            />
-          )}
-          {items.tasks.length > 0 && (
-            <TaskList
-              label={`Tasks on ${name}`}
-              tasks={items.tasks}
-              today={today}
-              hideDue
-            />
-          )}
-        </div>
-      )}
-    </Section>
+    <DropDay day={day} className="-m-2 p-2">
+      <Section
+        id={`day-${day}`}
+        title={
+          <span className="flex items-center gap-2">
+            {name}
+            {day === today && <Badge variant="secondary">Today</Badge>}
+          </span>
+        }
+      >
+        {empty ? (
+          <p className="text-sm text-muted-foreground">Nothing planned.</p>
+        ) : (
+          <div className="grid gap-2">
+            {items.events.length > 0 && (
+              <EventList
+                label={`Events on ${name}`}
+                events={items.events}
+                day={day}
+                timezone={timezone}
+                draggable
+              />
+            )}
+            {items.tasks.length > 0 && (
+              <TaskList
+                label={`Tasks on ${name}`}
+                tasks={items.tasks}
+                today={today}
+                hideDue
+              />
+            )}
+          </div>
+        )}
+      </Section>
+    </DropDay>
   )
 }

@@ -6,6 +6,7 @@ import {
   eventTimeLabel,
   eventToFormValues,
   groupByDay,
+  moveEvent,
   type CalendarEvent,
 } from "@/features/calendar/logic"
 import { eventFormSchema, parseCalendarView } from "@/features/calendar/schema"
@@ -265,5 +266,80 @@ describe("groupByDay", () => {
     expect(byDay.get(d("2026-10-16"))!.tasks.map((t) => t.title)).toEqual([
       "Gym",
     ])
+  })
+})
+
+describe("moveEvent (drag and drop)", () => {
+  it("keeps a timed event's local times on the new day", () => {
+    // 09:00–10:30 in Colombo (UTC+5:30) on Tue 20 Oct.
+    const meeting = timed(
+      "m",
+      "Meeting",
+      "2026-10-20T03:30:00.000Z",
+      "2026-10-20T05:00:00.000Z",
+    )
+    expect(
+      moveEvent(meeting, d("2026-10-20"), d("2026-10-23"), COLOMBO),
+    ).toEqual({
+      starts_at: "2026-10-23T03:30:00.000Z",
+      ends_at: "2026-10-23T05:00:00.000Z",
+      start_date: null,
+      end_date: null,
+    })
+  })
+
+  it("keeps local times across a daylight-saving change", () => {
+    // 09:00–10:00 in New York on Fri 30 Oct (EDT, UTC-4) → Mon 2 Nov (EST, UTC-5).
+    const call = timed(
+      "c",
+      "Call",
+      "2026-10-30T13:00:00.000Z",
+      "2026-10-30T14:00:00.000Z",
+    )
+    expect(
+      moveEvent(call, d("2026-10-30"), d("2026-11-02"), "America/New_York"),
+    ).toMatchObject({
+      starts_at: "2026-11-02T14:00:00.000Z",
+      ends_at: "2026-11-02T15:00:00.000Z",
+    })
+  })
+
+  it("moves an overnight event by the days dragged, from whichever day", () => {
+    // 23:00 Tue → 01:00 Wed in Colombo, dragged from its Wednesday part to Friday.
+    const night = timed(
+      "n",
+      "Night shift",
+      "2026-10-20T17:30:00.000Z",
+      "2026-10-20T19:30:00.000Z",
+    )
+    expect(
+      moveEvent(night, d("2026-10-21"), d("2026-10-23"), COLOMBO),
+    ).toMatchObject({
+      starts_at: "2026-10-22T17:30:00.000Z",
+      ends_at: "2026-10-22T19:30:00.000Z",
+    })
+  })
+
+  it("shifts all-day events, including multi-day ones, by whole days", () => {
+    const trip = allDay("t", "Trip", "2026-10-20", "2026-10-22")
+    expect(moveEvent(trip, d("2026-10-20"), d("2026-10-27"), COLOMBO)).toEqual({
+      starts_at: null,
+      ends_at: null,
+      start_date: "2026-10-27",
+      end_date: "2026-10-29",
+    })
+    expect(
+      moveEvent(trip, d("2026-10-22"), d("2026-10-21"), COLOMBO),
+    ).toMatchObject({
+      start_date: "2026-10-19",
+      end_date: "2026-10-21",
+    })
+  })
+
+  it("does nothing when dropped on the same day", () => {
+    const trip = allDay("t", "Trip", "2026-10-20", "2026-10-20")
+    expect(
+      moveEvent(trip, d("2026-10-20"), d("2026-10-20"), COLOMBO),
+    ).toBeNull()
   })
 })

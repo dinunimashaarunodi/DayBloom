@@ -8,6 +8,8 @@ import {
   type LocalDate,
 } from "@/lib/dates/local-date"
 
+import { currencyName, listCurrencies } from "@/lib/money"
+
 import type { TransactionKind } from "./schema"
 
 export type Transaction = {
@@ -61,6 +63,35 @@ export function monthSummary(transactions: Transaction[]) {
   const spent = sumByKind(transactions, "expense")
   const income = sumByKind(transactions, "income")
   return { spent, income, net: income - spent }
+}
+
+/** Only the transactions in the user's main currency (what analytics sum). */
+export function inCurrency<T extends Pick<Transaction, "currency">>(
+  transactions: T[],
+  currency: string,
+): T[] {
+  return transactions.filter((t) => t.currency === currency)
+}
+
+/**
+ * Spent and income per currency other than the main one, alphabetically.
+ * Amounts in different currencies are never added together or converted.
+ */
+export function otherCurrencyTotals(
+  transactions: Transaction[],
+  mainCurrency: string,
+): { currency: string; spent: number; income: number }[] {
+  const totals = new Map<string, { spent: number; income: number }>()
+  for (const t of transactions) {
+    if (t.currency === mainCurrency) continue
+    const total = totals.get(t.currency) ?? { spent: 0, income: 0 }
+    if (t.kind === "expense") total.spent += t.amount_minor
+    else total.income += t.amount_minor
+    totals.set(t.currency, total)
+  }
+  return [...totals]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([currency, total]) => ({ currency, ...total }))
 }
 
 /**
@@ -132,4 +163,10 @@ export function groupByDay(
   return [...groups.entries()]
     .sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
     .map(([date, items]) => ({ date, items }))
+}
+
+/** Every currency as [code, name], with `first` (the main one) at the top. */
+export function currencyOptions(first: string): [string, string][] {
+  const codes = [first, ...listCurrencies().filter((code) => code !== first)]
+  return codes.map((code) => [code, currencyName(code)])
 }

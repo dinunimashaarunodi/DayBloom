@@ -63,11 +63,46 @@ for real users.
    | -------------------------------------- | -------------------------------- |
    | `NEXT_PUBLIC_SUPABASE_URL`             | `https://<prod-ref>.supabase.co` |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | prod publishable key             |
+   | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | the VAPID public key (reminders) |
 
-   The app never needs the secret key. Don't add `SUPABASE_SECRET_KEY` to Vercel.
+   The app never needs the secret key or the VAPID private key. Don't add
+   `SUPABASE_SECRET_KEY`, `VAPID_PRIVATE_KEY` or `REMINDERS_SECRET` to Vercel.
 
 3. Deploy. Add your domain, then update the Supabase Site URL and redirect URLs
    to match (step 1.3).
+
+## 3b. Reminders (Web Push)
+
+Reminders are sent by the Supabase Edge Function `send-reminders`, which
+pg_cron calls every 5 minutes (migration `20261023035207_reminders`). Per
+project:
+
+1. Keys: one VAPID key pair and a random `REMINDERS_SECRET`, kept in
+   `.env.local` (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+   `VAPID_SUBJECT` = the site URL, `REMINDERS_SECRET`). Dev and prod can share
+   the key pair.
+2. Function secrets (from a temporary env file, deleted afterwards):
+   `REMINDERS_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   and `SERVICE_KEY` (that project's secret key):
+
+   ```powershell
+   npx supabase secrets set --env-file <tmp-file> --project-ref <ref>
+   npx supabase functions deploy send-reminders --use-api --no-verify-jwt --project-ref <ref>
+   ```
+
+3. Vault (so the cron job knows where to call, and with which secret):
+
+   ```sql
+   select vault.create_secret('https://<ref>.supabase.co/functions/v1/send-reminders', 'reminders_function_url');
+   select vault.create_secret('<REMINDERS_SECRET>', 'reminders_secret');
+   ```
+
+   Run with `npx supabase db query --linked --file <tmp.sql>` while linked to
+   that project. Without these two secrets the job does nothing.
+
+4. Check: `select private.send_reminders()`, then
+   `select status_code, content from net._http_response order by created desc limit 1`
+   should show `200` and `{"due":…,"sent":…}`.
 
 ## 4. After the first deploy
 

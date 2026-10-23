@@ -166,19 +166,35 @@ describe("finance: categories, transactions and RLS", () => {
     expect(error !== null || data?.length === 0).toBe(true)
   })
 
-  it("protects currency and ownership, and has no hard delete", async () => {
+  it("defaults to the main currency, allows others, and has no hard delete", async () => {
     await setUp(asAlice, alice)
-    const { data: tx } = await asAlice
-      .from("transactions")
-      .insert({ kind: "expense", amount_minor: 900, occurred_on: "2026-10-19" })
-      .select()
-      .single()
+    const insert = (fields: { currency?: string }) =>
+      asAlice
+        .from("transactions")
+        .insert({
+          kind: "expense",
+          amount_minor: 900,
+          occurred_on: "2026-10-19",
+          ...fields,
+        })
+        .select()
+        .single()
 
-    const currency = await asAlice
+    // No currency (or the old placeholder) means the main one.
+    const { data: tx } = await insert({})
+    expect(tx!.currency).toBe("LKR")
+    expect((await insert({ currency: "XXX" })).data!.currency).toBe("LKR")
+
+    // Another currency can be chosen, on insert and later.
+    expect((await insert({ currency: "USD" })).data!.currency).toBe("USD")
+    const { data: changed } = await asAlice
       .from("transactions")
-      .update({ currency: "USD" } as never)
+      .update({ currency: "EUR" })
       .eq("id", tx!.id)
-    expect(currency.error).not.toBeNull()
+      .select("currency")
+      .single()
+    expect(changed!.currency).toBe("EUR")
+    expect((await insert({ currency: "dollars" })).error).not.toBeNull()
 
     await asAlice.from("transactions").delete().eq("id", tx!.id)
     const { count } = await adminClient()

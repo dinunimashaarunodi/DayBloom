@@ -10,9 +10,11 @@ import {
   validationError,
 } from "@/lib/action-state"
 import { getCurrentUser } from "@/lib/auth/session"
+import { localDateSchema } from "@/lib/dates/local-date"
 import { createClient } from "@/lib/supabase/server"
 
-import { eventInputToRow } from "./logic"
+import { eventInputToRow, moveEvent } from "./logic"
+import { getEvent } from "./queries"
 import { eventFormSchema, eventIdSchema } from "./schema"
 
 const SAVE_ERROR = "We couldn't save that. Please try again."
@@ -110,4 +112,36 @@ export async function deleteEvent(id: string): Promise<void> {
     .eq("id", id)
   revalidateCalendar()
   redirect("/calendar")
+}
+
+/**
+ * Drag and drop: moves an event from one day to another, keeping its local
+ * times (or shifting an all-day event's days).
+ */
+export async function moveEventToDay(
+  id: string,
+  from: string,
+  to: string,
+): Promise<{ error?: string; title?: string }> {
+  await getCurrentUser()
+  const days = localDateSchema.array().length(2).safeParse([from, to])
+  if (!eventIdSchema.safeParse(id).success || !days.success) {
+    return { error: SAVE_ERROR }
+  }
+  const event = await getEvent(id)
+  if (!event) return { error: SAVE_ERROR }
+  const { timezone } = await getProfile()
+  const moved = moveEvent(event, days.data[0]!, days.data[1]!, timezone)
+  if (!moved) {
+    return days.data[0] === days.data[1]
+      ? { title: event.title }
+      : { error: DST_GAP_ERROR }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from("events").update(moved).eq("id", id)
+  if (error) return { error: SAVE_ERROR }
+
+  revalidateCalendar()
+  return { title: event.title }
 }

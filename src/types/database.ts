@@ -549,6 +549,66 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          endpoint: string
+          id: string
+          p256dh: string
+          subscribed_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          subscribed_at?: string
+          user_id?: string
+        }
+        Update: {
+          auth?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          subscribed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_settings: {
+        Row: {
+          evening_enabled: boolean
+          evening_time: string
+          last_evening_on: string | null
+          last_morning_on: string | null
+          morning_enabled: boolean
+          morning_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          evening_enabled?: boolean
+          evening_time?: string
+          last_evening_on?: string | null
+          last_morning_on?: string | null
+          morning_enabled?: boolean
+          morning_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          evening_enabled?: boolean
+          evening_time?: string
+          last_evening_on?: string | null
+          last_morning_on?: string | null
+          morning_enabled?: boolean
+          morning_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_series: {
         Row: {
           archived_at: string | null
@@ -750,6 +810,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_due_reminders: {
+        Args: never
+        Returns: {
+          auth: string
+          body: string
+          endpoint: string
+          kind: string
+          p256dh: string
+          title: string
+          url: string
+          user_id: string
+        }[]
+      }
       close_past_days: { Args: never; Returns: number }
       current_local_date: { Args: never; Returns: string }
       delete_my_account: { Args: never; Returns: undefined }

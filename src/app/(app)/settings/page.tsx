@@ -16,6 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DeleteAccountForm } from "@/features/auth/components/delete-account-form"
 import { SignOutButton } from "@/features/auth/components/sign-out-button"
 import { ExportData } from "@/features/export/components/export-data"
+import { DevicePush } from "@/features/reminders/components/device-push"
+import { ReminderForm } from "@/features/reminders/components/reminder-form"
+import { getReminders } from "@/features/reminders/queries"
 import { ProfileForm } from "@/features/profile/components/profile-form"
 import { getProfile } from "@/features/profile/queries"
 import { listTimeZones } from "@/lib/dates/timezone"
@@ -54,6 +57,24 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <ThemeSwitcher variant="full" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>Reminders</h2>
+            </CardTitle>
+            <CardDescription>
+              Gentle nudges at times you choose. Off unless you turn them on,
+              and you can stop them any time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <DevicePush />
+            <Suspense fallback={<Skeleton className="h-48" />}>
+              <Reminders />
+            </Suspense>
           </CardContent>
         </Card>
 
@@ -141,4 +162,12 @@ async function ProfileSection() {
 async function AccountEmail() {
   const profile = await getProfile()
   return <CardDescription>Signed in as {profile.email}</CardDescription>
+}
+
+async function Reminders() {
+  const [{ settings }, profile] = await Promise.all([
+    getReminders(),
+    getProfile(),
+  ])
+  return <ReminderForm settings={settings} timezone={profile.timezone} />
 }

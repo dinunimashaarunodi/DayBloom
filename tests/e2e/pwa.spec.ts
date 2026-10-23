@@ -67,7 +67,7 @@ test.describe("signed in", () => {
     await context.setOffline(true)
     await expect(
       page.getByRole("status").filter({ hasText: "offline" }),
-    ).toContainText("changes won't save until you're back online")
+    ).toContainText("kept on this device")
 
     // A full page load can't reach the server: the friendly page shows.
     await page.reload()

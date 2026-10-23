@@ -22,18 +22,25 @@ const KIND_LABELS: Record<TransactionKind, string> = {
   income: "Income",
 }
 
-/** Add or edit a transaction. Amounts are typed in the user's currency. */
+/**
+ * Add or edit a transaction. The currency defaults to the user's main one;
+ * others can be picked (their totals are kept separate, never converted).
+ */
 export function TransactionForm({
   action,
   categories,
   currency,
+  currencies,
   defaults,
   submitLabel,
 }: {
   action: TransactionAction
   /** Categories to offer (active ones, plus the current one when editing). */
   categories: Category[]
+  /** The preselected currency: the main one, or the transaction's own. */
   currency: string
+  /** Every currency to offer, as [code, name], main one first. */
+  currencies: [string, string][]
   defaults: Record<string, string>
   submitLabel: string
 }) {
@@ -77,16 +84,30 @@ export function TransactionForm({
         </div>
       </fieldset>
 
-      <FormField
-        name="amount"
-        label={`Amount (${currency})`}
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="0.00"
-        required
-        defaultValue={values.amount}
-        errors={errors.amount}
-      />
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
+        <FormField
+          name="amount"
+          label="Amount"
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="0.00"
+          required
+          defaultValue={values.amount}
+          errors={errors.amount}
+        />
+        <SelectField
+          name="currency"
+          label="Currency"
+          defaultValue={values.currency || currency}
+          errors={errors.currency}
+        >
+          {currencies.map(([code, name]) => (
+            <NativeSelectOption key={code} value={code}>
+              {code} · {name}
+            </NativeSelectOption>
+          ))}
+        </SelectField>
+      </div>
 
       <SelectField
         // Re-mount when the type changes so the selection resets cleanly.

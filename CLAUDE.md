@@ -14,29 +14,33 @@ Anyone can sign up, and each user sees only their own data.
   - Prod auth was pushed from a temporary copy of `config.toml` (`config push --project-ref <prod> --workdir <tmp>`), auth service only.
 - Still waiting on: Resend SMTP (needs a verified domain).
 
-**Phase 17 (repeating tasks) is built and all automated checks pass on dev. Waiting for the user's approval.** The user asked for every postponed feature that needs no paid service, one phase at a time (order below). The `repeating_tasks` migration (`20261023031113`) is on dev only; push it to prod before deploying. Update this line whenever a phase is completed and verified.
+**Phases 16–22 (the free postponed features) are built and verified on dev. Waiting for the user's approval.** Dev-only, not yet in prod: migrations `20261023031113_repeating_tasks`, `20261023032742_word_review_schedule`, `20261023035207_reminders`, `20261023041104_transaction_currencies`, `20261023062438_offline_task_ids`, plus the `send-reminders` Edge Function, its secrets and the two Vault secrets (docs/deployment.md 3b). Vercel also needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY`. Update this line whenever a phase is completed and verified.
 
-| Phase | Scope                                                                                                                               | Status |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                                                            | ✅     |
-| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                                            | ✅     |
-| 2     | `lib/dates` timezone utilities and tests                                                                                            | ✅     |
-| 3     | Tasks and Today page                                                                                                                | ✅     |
-| 4     | Calendar (month/week, one-off events)                                                                                               | ✅     |
-| 5     | Day close, review, "Needs a decision" flow, history                                                                                 | ✅     |
-| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                                               | 🚧     |
-| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                                                        | ✅     |
-| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                                                           | ✅     |
-| 9     | Journal: entries per local day, search, Today card, entries on History days                                                         | ✅     |
-| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                                                                 | ✅     |
-| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card                                             | ✅     |
-| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                                                    | ✅     |
-| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                                                       | ✅     |
-| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card                                         | ✅     |
-| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help                                     | ✅     |
-| 16    | Data export: everything as JSON, seven CSV datasets, from Settings → Your data                                                      | ✅     |
-| 17    | Repeating tasks: daily, chosen weekdays or monthly; today's copy created lazily; Repeating tab                                      | ✅     |
-| 18+   | Free postponed features: smarter flashcards (SRS) → calendar drag-and-drop → reminders (Web Push) → multi-currency → offline writes |        |
+| Phase | Scope                                                                                                        | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------ | ------ |
+| 0     | Scaffold: Next.js, Tailwind, shadcn, ESLint/Prettier, Vitest, Playwright                                     | ✅     |
+| 1     | Supabase, auth (email confirm, password reset), profiles, RLS, app shell                                     | ✅     |
+| 2     | `lib/dates` timezone utilities and tests                                                                     | ✅     |
+| 3     | Tasks and Today page                                                                                         | ✅     |
+| 4     | Calendar (month/week, one-off events)                                                                        | ✅     |
+| 5     | Day close, review, "Needs a decision" flow, history                                                          | ✅     |
+| 6     | Hardening, custom SMTP, account deletion, privacy page, Vercel deploy                                        | 🚧     |
+| 7     | Finance: expenses, income, categories, monthly analytics (Recharts), budgets                                 | ✅     |
+| 8     | Habits: weekly schedules, check-ins, streaks, 12-week heatmap, Today card                                    | ✅     |
+| 9     | Journal: entries per local day, search, Today card, entries on History days                                  | ✅     |
+| 10    | Focus timer: countdown sessions, today and 7-day totals, Today card                                          | ✅     |
+| 11    | Workouts: log (type, minutes, effort, notes), this week, active-week streak, Today card                      | ✅     |
+| 12    | Goals: milestones checklist, progress, target dates, achieve/archive, Today card                             | ✅     |
+| 13    | Languages: practice log, day streak, vocabulary, flashcard review, Today card                                | ✅     |
+| 14    | Achievements: 19 badges derived from existing data, progress, "New" celebration, Today card                  | ✅     |
+| 15    | Installable PWA: manifest, icons, offline page via service worker, offline banner, install help              | ✅     |
+| 16    | Data export: everything as JSON, seven CSV datasets, from Settings → Your data                               | ✅     |
+| 17    | Repeating tasks: daily, chosen weekdays or monthly; today's copy created lazily; Repeating tab               | ✅     |
+| 18    | Smarter flashcards: Leitner boxes (1/3/7/14/30 days), only due words reviewed, review counts on Today        | ✅     |
+| 19    | Calendar drag-and-drop: move events between days in month and week views (desktop); tasks stay non-draggable | ✅     |
+| 20    | Reminders: opt-in morning plan and evening reflection pushes, per-device opt-in, Edge Function sender        | ✅     |
+| 21    | More than one currency: per-transaction currency, separate totals, no conversion                             | ✅     |
+| 22    | Offline writes: new tasks, task ticks and habit check-ins queue on the device and sync in order              | ✅     |
 
 Still postponed: Google Calendar sync (free, but needs the user to create Google OAuth credentials), Resend SMTP (needs a domain), leaked-password protection (paid Supabase plan).
 
@@ -61,7 +65,8 @@ Still postponed: Google Calendar sync (free, but needs the user to create Google
 - **PWA:** `app/manifest.ts`, icons in `public/icons` plus `app/apple-icon.png` (regenerate with `node scripts/generate-icons.mjs`).
   - `public/sw.js` only serves `public/offline.html` when a page load fails offline. It caches nothing personal and queues no writes; bump its `CACHE` name when `offline.html` changes.
   - The worker registers in production only (`components/pwa/pwa-setup.tsx`). The proxy matcher skips `sw.js` and `offline.html` so they load signed out.
-  - `OfflineBanner` warns that changes won't save while offline. Don't enable `experimental.useOffline`: it retries queued Server Actions (offline writes are postponed).
+  - Offline writes (`lib/outbox.ts`, `(app)/_outbox`): only new tasks, task ticks and habit check-ins are queued, per account, in localStorage, and replayed in order by `OutboxSync` (on load, on `online`, every 30 s). All are idempotent: tasks carry a device-chosen id (`createTaskWithId`, insert ignores existing ids); ticks and check-ins set a state. Refused items are dropped, and the user is told.
+  - Other forms still need a connection. Client actions must catch network errors (an uncaught throw in a transition shows the error page). Don't enable `experimental.useOffline`: it would retry every queued Server Action.
 
 ### Layout
 
@@ -133,13 +138,14 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - Timed events store instants (`starts_at`, `ends_at`), so their local day follows the user's timezone.
   - All-day events store calendar days (`start_date`..`end_date`, inclusive) and never shift.
   - The form only creates same-day timed events, but the logic handles events that cross midnight.
+  - Drag and drop (`calendar-dnd.tsx`, `moveEvent()`): only events move. Timed events keep their local times on the new day (DST-safe); all-day events shift their days. Tasks are never draggable, because dragging one later would be a postpone shortcut. Keyboard and touch users edit the event instead.
 - **Money** (`src/lib/money.ts`, the only place for money logic):
   - Amounts are integer minor units (`amount_minor bigint`).
   - `parseAmount` uses string arithmetic; commas are thousands separators and a dot is the decimal point.
   - Use `formatMoney` and `currencyDigits` for display and decimal places.
-  - Each user has one currency (`profiles.currency`, set once in finance setup).
-  - The `transactions_before_write` trigger copies the currency onto each transaction, so clients never write it.
-  - Analytics only sum transactions in the user's current currency.
+  - Each user has one main currency (`profiles.currency`, set once in finance setup). A transaction may be in any other currency (Phase 21).
+  - The `transactions_before_write` trigger fills in the main currency when a transaction has none (or the placeholder 'XXX').
+  - Analytics, charts and budgets only sum the main currency (`inCurrency()`). Other currencies get their own totals (`otherCurrencyTotals()`), never converted: free exchange-rate sources don't cover every currency (e.g. LKR).
   - Categories are archived, never deleted; transactions are soft-deleted.
   - **Budgets** are effective-dated: a `budgets` row applies from `starts_on` (a month start) until a later row for the same scope replaces it.
     - The scope is an expense category, or overall when `category_id` is null. A null amount means removed.
@@ -164,13 +170,20 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - A passed target date is stated plainly ("Target date was …"), never as a failure.
 - **Languages** (`features/languages`): languages are archived, never deleted; one per name per user (case-insensitive).
   - Practice entries belong to a local day (never future). The day streak counts days with any practice; today without practice doesn't break it.
-  - Words have a `learned` flag (trigger stamps `learned_at`). Review is a shuffled flashcard deck of unlearned words, with no SRS scheduling yet. The deck is shuffled on the server and kept for the session.
+  - Words have a `learned` flag (trigger stamps `learned_at`).
+  - Spaced repetition: `review_word()` moves a word up a Leitner box when remembered (1, 3, 7, 14, 30 days; `reviewIntervalDays()` mirrors it, DB-tested), back to box 1 (tomorrow) when not, and marks it learned when remembered in box 5. `due_on` null = due now.
+  - The review deck is the due words, shuffled on the server. `Flashcards` keeps its own deck and count, because each answer revalidates the page.
 - **Export** (`features/export`, route `app/export/route.ts`): `/export` returns everything as JSON; `/export?dataset=<key>` one CSV from `CSV_DATASETS`.
   - Reads page through `fetchAll` (PostgREST caps responses at 1000 rows) and filter by `user_id` on top of RLS. Responses are `no-store`.
   - `csvCell` neutralises formula-like text (CSV injection). New tables must be added to `ALL_TABLES`.
 - **Achievements** (`features/achievements`): derived, never stored.
   - `my_achievements()` (SQL, SECURITY INVOKER) returns each code's progress and target from the caller's data. Copy lives in `definitions.ts`; a DB test keeps the codes in sync. Add new ones to both.
   - `achievement_seen` only records which unlocked ones were seen. Marking them seen must not revalidate, or the open page loses its "New" labels.
+
+- **Reminders** (`features/reminders`, `supabase/functions/send-reminders`): opt-in, off by default; morning plan and evening reflection (only if today isn't reviewed).
+  - pg_cron (`daybloom-send-reminders`, every 5 min) → `private.send_reminders()` → Edge Function (shared `REMINDERS_SECRET`, `--no-verify-jwt`) → `claim_due_reminders()` (service role only). Claiming marks the day as sent first, so nothing goes out twice; reminders over 2 hours late are skipped.
+  - The service-role key stays in Supabase (function secret `SERVICE_KEY`), never in Vercel. Endpoints the push service reports as gone (404/410) are deleted.
+  - A shared device only gets the reminders of the account that subscribed it last. Headless test browsers can't subscribe to real push, so E2E covers settings; DB tests cover the claim rules.
 
 ## Database and Supabase security rules
 
@@ -207,7 +220,7 @@ Keep `lib/dates` and the Zod schemas free of React and Next.js imports.
   - A script CSP is deliberately off: nonces would force dynamic rendering.
 - **Deployment:** see `docs/deployment.md`.
   - Prod is its own Supabase project, with auth URLs set in its dashboard (never `config push` to prod).
-  - Vercel gets only the two `NEXT_PUBLIC_*` variables.
+  - Vercel gets only the three `NEXT_PUBLIC_*` variables (Supabase URL, publishable key, VAPID public key).
 - Auth emails (signup confirmation, password reset) are sent with `createEmailLinkClient()` (implicit flow) and return to `/auth/callback`.
   - That page reads the one-time session from the URL fragment in the browser, so links work on any device.
   - Default PKCE links only work in the browser that requested them, which broke real users.

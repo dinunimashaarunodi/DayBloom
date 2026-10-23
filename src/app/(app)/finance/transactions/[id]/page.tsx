@@ -15,6 +15,7 @@ import {
   getTransaction,
 } from "@/features/finance/queries"
 import { financeIdSchema } from "@/features/finance/schema"
+import { currencyOptions } from "@/features/finance/logic"
 import { minorToInput } from "@/lib/money"
 
 export const metadata: Metadata = { title: "Edit transaction" }
@@ -55,6 +56,7 @@ async function TransactionEditor({
           (c) => !c.archived_at || c.id === transaction.category_id,
         )}
         currency={transaction.currency}
+        currencies={currencyOptions(currency)}
         submitLabel="Save changes"
         defaults={{
           kind: transaction.kind,

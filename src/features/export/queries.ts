@@ -42,9 +42,11 @@ async function fetchAll(
     if (options.orderBy) query = query.order(options.orderBy)
     // A stable order for paging (two tables have no id column).
     query =
-      table === "profiles" || table === "achievement_seen"
-        ? query.order(table === "profiles" ? "user_id" : "code")
-        : query.order("id")
+      table === "achievement_seen"
+        ? query.order("code")
+        : table === "profiles" || table === "reminder_settings"
+          ? query.order("user_id")
+          : query.order("id")
     const { data, error } = await query.range(from, from + PAGE - 1)
     if (error) failed()
     rows.push(...(data as unknown as Row[]))

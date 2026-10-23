@@ -23,6 +23,7 @@ export const ALL_TABLES = [
   "budgets",
   "journal_entries",
   "achievement_seen",
+  "reminder_settings",
 ] as const
 
 export type TableName = (typeof ALL_TABLES)[number]

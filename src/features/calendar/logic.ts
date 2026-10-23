@@ -1,5 +1,7 @@
 // Pure calendar rules (no React, Next.js or Supabase), unit-tested.
 import {
+  addDays,
+  daysBetween,
   localDateTimeToInstant,
   localDayRange,
   toLocalDate,
@@ -168,4 +170,51 @@ export function groupByDay<T extends CalendarTask>(
     })
   }
   return result
+}
+
+type MovedEvent = Pick<
+  CalendarEvent,
+  "starts_at" | "ends_at" | "start_date" | "end_date"
+>
+
+/**
+ * Moves an event by the days between `from` (the day it was dragged from) and
+ * `to`. Timed events keep their local start and end times, so a 09:00 meeting
+ * stays at 09:00 across a daylight-saving change; all-day events shift their
+ * days. Returns null when the move is a no-op, or when daylight saving makes
+ * the times collapse on the new day.
+ */
+export function moveEvent(
+  event: CalendarEvent,
+  from: LocalDate,
+  to: LocalDate,
+  tz: string,
+): MovedEvent | null {
+  const days = daysBetween(from, to)
+  if (days === 0) return null
+  if (event.all_day) {
+    return {
+      starts_at: null,
+      ends_at: null,
+      start_date: addDays(event.start_date!, days),
+      end_date: addDays(event.end_date!, days),
+    }
+  }
+  const shift = (instant: string) => {
+    const at = new Date(instant)
+    return localDateTimeToInstant(
+      addDays(toLocalDate(at, tz), days),
+      toLocalTime(at, tz),
+      tz,
+    )
+  }
+  const start = shift(event.starts_at!)
+  const end = shift(event.ends_at!)
+  if (end <= start) return null
+  return {
+    starts_at: start.toISOString(),
+    ends_at: end.toISOString(),
+    start_date: null,
+    end_date: null,
+  }
 }

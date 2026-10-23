@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  currencyOptions,
   dailySpending,
   groupByDay,
+  inCurrency,
   monthKey,
   monthRange,
   monthSummary,
+  otherCurrencyTotals,
   percentChange,
   spendingByCategory,
   UNCATEGORIZED,
@@ -190,5 +193,52 @@ describe("form schemas", () => {
     expect(
       categoryFormSchema.parse({ kind: "income", name: " Bonus " }).name,
     ).toBe("Bonus")
+  })
+})
+
+describe("more than one currency", () => {
+  const usd = (kind: "expense" | "income", amount: number) => ({
+    ...tx(kind, amount, "2026-10-05"),
+    currency: "USD",
+  })
+  const all = [
+    tx("expense", 5000, "2026-10-03"),
+    usd("expense", 1250),
+    usd("expense", 750),
+    usd("income", 10000),
+    { ...tx("expense", 300, "2026-10-04"), currency: "EUR" },
+  ]
+
+  it("keeps the main currency's transactions for totals and charts", () => {
+    expect(inCurrency(all, "LKR")).toHaveLength(1)
+    expect(monthSummary(inCurrency(all, "LKR")).spent).toBe(5000)
+  })
+
+  it("totals other currencies separately, never mixing them", () => {
+    expect(otherCurrencyTotals(all, "LKR")).toEqual([
+      { currency: "EUR", spent: 300, income: 0 },
+      { currency: "USD", spent: 2000, income: 10000 },
+    ])
+    expect(otherCurrencyTotals(inCurrency(all, "LKR"), "LKR")).toEqual([])
+  })
+
+  it("lists every currency with the main one first", () => {
+    const options = currencyOptions("LKR")
+    expect(options[0]).toEqual(["LKR", "Sri Lankan Rupee"])
+    expect(options.filter(([code]) => code === "LKR")).toHaveLength(1)
+    expect(options.some(([code]) => code === "USD")).toBe(true)
+  })
+
+  it("accepts a chosen currency or none (the main one)", () => {
+    const base = { kind: "expense", amount: "10", date: "2026-10-05" }
+    expect(
+      transactionFormSchema.parse({ ...base, currency: "USD" }).currency,
+    ).toBe("USD")
+    expect(
+      transactionFormSchema.parse({ ...base, currency: "" }).currency,
+    ).toBeNull()
+    expect(
+      transactionFormSchema.safeParse({ ...base, currency: "ZZZ" }).success,
+    ).toBe(false)
   })
 })

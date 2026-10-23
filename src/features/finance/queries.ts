@@ -44,19 +44,23 @@ export const getCategories = cache(async (): Promise<Category[]> => {
   return data as Category[]
 })
 
-/** Transactions on the local days from..to, in the user's current currency. */
+/**
+ * Transactions on the local days from..to: in one currency, or in all of them
+ * when `currency` is left out.
+ */
 async function getTransactionsBetween(
   from: LocalDate,
   to: LocalDate,
-  currency: string,
+  currency?: string,
 ): Promise<Transaction[]> {
   const user = await getCurrentUser()
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("transactions")
     .select(TRANSACTION_COLUMNS)
     .eq("user_id", user.id)
-    .eq("currency", currency)
+  if (currency) query = query.eq("currency", currency)
+  const { data, error } = await query
     .is("deleted_at", null)
     .gte("occurred_on", from)
     .lte("occurred_on", to)
@@ -68,7 +72,7 @@ async function getTransactionsBetween(
 
 export async function getMonthTransactions(
   monthStart: LocalDate,
-  currency: string,
+  currency?: string,
 ) {
   const { from, to } = monthRange(monthStart)
   return getTransactionsBetween(from, to, currency)

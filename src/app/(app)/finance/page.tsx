@@ -25,9 +25,12 @@ import { MonthNav } from "@/features/finance/components/month-nav"
 import { TransactionForm } from "@/features/finance/components/transaction-form"
 import { TransactionList } from "@/features/finance/components/transaction-list"
 import {
+  currencyOptions,
   dailySpending,
+  inCurrency,
   monthRange,
   monthSummary,
+  otherCurrencyTotals,
   spendingByCategory,
 } from "@/features/finance/logic"
 import {
@@ -42,7 +45,12 @@ import {
   formatLocalDate,
   startOfMonth,
 } from "@/lib/dates/local-date"
-import { currencyName, listCurrencies, suggestCurrency } from "@/lib/money"
+import {
+  currencyName,
+  formatMoney,
+  listCurrencies,
+  suggestCurrency,
+} from "@/lib/money"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Finance" }
@@ -87,12 +95,18 @@ async function FinanceContent({
 
   const thisMonth = startOfMonth(today)
   const month = parseMonth(params.month) ?? thisMonth
-  const [transactions, previous, categories, budgetRows] = await Promise.all([
-    getMonthTransactions(month, currency),
-    getMonthTransactions(addMonths(month, -1), currency),
-    getCategories(),
-    getBudgetRows(),
-  ])
+  const [allTransactions, previous, categories, budgetRows] = await Promise.all(
+    [
+      getMonthTransactions(month),
+      getMonthTransactions(addMonths(month, -1), currency),
+      getCategories(),
+      getBudgetRows(),
+    ],
+  )
+  // Totals, charts and budgets count only the main currency; others are
+  // listed and totalled separately, never converted.
+  const transactions = inCurrency(allTransactions, currency)
+  const others = otherCurrencyTotals(allTransactions, currency)
   const summary = monthSummary(transactions)
   const byCategory = spendingByCategory(transactions, categories)
   const daily = dailySpending(transactions, month)
@@ -134,6 +148,32 @@ async function FinanceContent({
           previousSpent={monthSummary(previous).spent}
         />
 
+        {others.length > 0 && (
+          <section
+            aria-label="Other currencies"
+            className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-dashed px-4 py-3 text-sm"
+          >
+            <span className="font-medium">Also this month</span>
+            {others.map((o) => (
+              <span
+                key={o.currency}
+                className="text-muted-foreground tabular-nums"
+              >
+                {o.currency}:{" "}
+                {[
+                  o.spent > 0 && `${formatMoney(o.spent, o.currency)} spent`,
+                  o.income > 0 && `${formatMoney(o.income, o.currency)} income`,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </span>
+            ))}
+            <span className="w-full text-xs text-muted-foreground">
+              Kept separate from your {currency} totals and budgets.
+            </span>
+          </section>
+        )}
+
         <div className="grid gap-6 md:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <aside className="order-first grid content-start gap-6 lg:order-last">
             <DashboardCard title="Add transaction" icon={Plus} accent="peach">
@@ -143,6 +183,7 @@ async function FinanceContent({
                 action={createTransaction}
                 categories={categories.filter((c) => !c.archived_at)}
                 currency={currency}
+                currencies={currencyOptions(currency)}
                 submitLabel="Add"
                 defaults={{
                   kind: "expense",
@@ -195,9 +236,9 @@ async function FinanceContent({
         </div>
 
         <Section id="transactions" title="Transactions">
-          {transactions.length > 0 ? (
+          {allTransactions.length > 0 ? (
             <TransactionList
-              transactions={transactions}
+              transactions={allTransactions}
               categories={categories}
             />
           ) : (

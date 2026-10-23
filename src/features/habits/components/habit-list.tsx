@@ -2,12 +2,29 @@
 
 import { Check, Flame } from "lucide-react"
 import Link from "next/link"
-import { useOptimistic, useState, useTransition } from "react"
+import {
+  useOptimistic,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react"
 
 import type { LocalDate } from "@/lib/dates/local-date"
+import {
+  isOffline,
+  outboxItems,
+  pendingCheckIns,
+  queueChange,
+  subscribeOutbox,
+  type OutboxItem,
+} from "@/lib/outbox"
 import { cn } from "@/lib/utils"
 
 import { setCheckIn } from "../actions"
+
+const NONE: OutboxItem[] = []
+const NOT_KEPT =
+  "You're offline, and this device couldn't keep the check-in. Please try again when you're back online."
 
 export type HabitDay = {
   date: LocalDate
@@ -56,12 +73,38 @@ export function HabitList({
   const [saving, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
+  // Check-ins made offline show here until they're sent.
+  const waiting = pendingCheckIns(
+    useSyncExternalStore(subscribeOutbox, outboxItems, () => NONE),
+  )
+  const shown = optimistic.map((habit) => ({
+    ...habit,
+    days: habit.days.map((day) => {
+      const key = `${habit.id}|${day.date}`
+      return waiting.has(key) ? { ...day, done: waiting.get(key)! } : day
+    }),
+  }))
+
+  function keepForLater(habitId: string, date: LocalDate, done: boolean) {
+    setError(
+      queueChange({ kind: "setCheckIn", habitId, date, done })
+        ? undefined
+        : NOT_KEPT,
+    )
+  }
+
   function toggle(habit: HabitListItem, day: HabitDay) {
     const done = !day.done
+    if (isOffline()) return keepForLater(habit.id, day.date, done)
     startTransition(async () => {
       toggleOptimistic({ id: habit.id, date: day.date, done })
-      const result = await setCheckIn(habit.id, day.date, done)
-      setError(result.error)
+      try {
+        const result = await setCheckIn(habit.id, day.date, done)
+        setError(result.error)
+      } catch {
+        // The connection dropped mid-request: keep it for later.
+        keepForLater(habit.id, day.date, done)
+      }
     })
   }
 
@@ -79,7 +122,7 @@ export function HabitList({
           variant === "week" && "overflow-hidden surface",
         )}
       >
-        {optimistic.map((habit) => {
+        {shown.map((habit) => {
           const days =
             variant === "today"
               ? habit.days.filter((d) => d.date === today)

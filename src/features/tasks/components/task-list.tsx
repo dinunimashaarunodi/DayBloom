@@ -2,17 +2,34 @@
 
 import { ChevronDown, ChevronUp, Repeat } from "lucide-react"
 import Link from "next/link"
-import { useOptimistic, useState, useTransition } from "react"
+import {
+  useOptimistic,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { LocalDate } from "@/lib/dates/local-date"
+import {
+  isOffline,
+  outboxItems,
+  pendingTaskDone,
+  queueChange,
+  subscribeOutbox,
+  type OutboxItem,
+} from "@/lib/outbox"
 import { cn } from "@/lib/utils"
 
 import { reorderTasks, setTaskDone } from "../actions"
 import { dueLabel, isOverdue, shouldWarnAboutMoves, type Task } from "../logic"
 import { MovedWarning } from "./moved-warning"
+
+const NONE: OutboxItem[] = []
+const NOT_KEPT =
+  "You're offline, and this device couldn't keep the change. Please try again when you're back online."
 
 export function TaskList({
   tasks,
@@ -38,15 +55,42 @@ export function TaskList({
   const [saving, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
+  // Ticks made offline show here until they're sent.
+  const waiting = pendingTaskDone(
+    useSyncExternalStore(subscribeOutbox, outboxItems, () => NONE),
+  )
+  const shown = optimisticTasks.map((t) =>
+    waiting.has(t.id)
+      ? {
+          ...t,
+          status: waiting.get(t.id) ? ("done" as const) : ("todo" as const),
+        }
+      : t,
+  )
+
+  function keepForLater(task: Task, done: boolean) {
+    setError(
+      queueChange({ kind: "setTaskDone", id: task.id, done })
+        ? undefined
+        : NOT_KEPT,
+    )
+  }
+
   function toggle(task: Task, done: boolean) {
+    if (isOffline()) return keepForLater(task, done)
     startTransition(async () => {
       applyOptimistic((current) =>
         current.map((t) =>
           t.id === task.id ? { ...t, status: done ? "done" : "todo" } : t,
         ),
       )
-      const result = await setTaskDone(task.id, done)
-      setError(result.error)
+      try {
+        const result = await setTaskDone(task.id, done)
+        setError(result.error)
+      } catch {
+        // The connection dropped mid-request: keep it for later.
+        keepForLater(task, done)
+      }
     })
   }
 
@@ -56,8 +100,14 @@ export function TaskList({
     next.splice(index + delta, 0, item)
     startTransition(async () => {
       applyOptimistic(next)
-      const result = await reorderTasks(next.map((t) => t.id))
-      setError(result.error)
+      try {
+        const result = await reorderTasks(next.map((t) => t.id))
+        setError(result.error)
+      } catch {
+        setError(
+          "Reordering needs a connection. Please try again when you're back online.",
+        )
+      }
     })
   }
 
@@ -69,7 +119,7 @@ export function TaskList({
         </p>
       )}
       <ul aria-label={label} className="divide-y overflow-hidden surface">
-        {optimisticTasks.map((task, index) => {
+        {shown.map((task, index) => {
           const done = task.status === "done"
           const showDue =
             !hideDue &&

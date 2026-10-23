@@ -54,9 +54,11 @@ export default function PrivacyPage() {
               removes it immediately.
             </li>
             <li>
-              <strong>On your device:</strong> your theme choice, and (if you
-              install the app) a small offline notice page. Your own data is
-              never stored on the device by the app.
+              <strong>On your device:</strong> your theme choice, (if you
+              install the app) a small offline notice page, and, only while
+              you&apos;re offline, new tasks, ticks and habit check-ins waiting
+              to be sent. They&apos;re removed from the device as soon as
+              they&apos;re saved.
             </li>
             <li>
               <strong>Achievements:</strong> worked out from the data above; we
@@ -86,6 +88,18 @@ export default function PrivacyPage() {
           <p>
             We email you only for your account: confirming your address and
             resetting your password.
+          </p>
+        </PrivacySection>
+
+        <PrivacySection title="Reminders">
+          <p>
+            Reminders are off unless you turn them on. If you do, we store your
+            chosen times and, for each device you turn them on for, the address
+            your browser gives us for notifications. Reminders are delivered by
+            your browser&apos;s notification service (for example Google, Apple
+            or Mozilla). They contain only a short message, such as how many
+            tasks you have planned. Turning them off on a device deletes its
+            address.
           </p>
         </PrivacySection>
 

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { reviewIntervalDays } from "@/features/languages/logic"
 import { addDays, todayIn, type LocalDate } from "@/lib/dates/local-date"
 import type { Database } from "@/types/database"
 
@@ -64,6 +65,61 @@ describe("languages, practice and words", () => {
     await asAlice.from("languages").delete().eq("id", l.id)
     const { data } = await asAlice.from("languages").select("id").eq("id", l.id)
     expect(data).toHaveLength(1)
+  })
+
+  it("schedules flashcard reviews with growing intervals", async () => {
+    const l = await language(asAlice, "Portuguese")
+    const { data: word, error } = await asAlice
+      .from("language_words")
+      .insert({ language_id: l.id, term: "ciao", meaning: "hello" })
+      .select("id, box, due_on, learned")
+      .single()
+    if (error) throw error
+    expect(word).toMatchObject({ box: 0, due_on: null, learned: false })
+
+    const review = async (remembered: boolean) => {
+      const { data, error } = await asAlice
+        .rpc("review_word", { word_id: word.id, remembered })
+        .single()
+      if (error) throw error
+      return data
+    }
+
+    // Remembered: up a box each time, due later each time.
+    for (const box of [1, 2, 3, 4, 5]) {
+      expect(await review(true)).toEqual({
+        box,
+        due_on: addDays(today, reviewIntervalDays(box)),
+        learned: false,
+      })
+    }
+    // Forgotten: back to box 1, due tomorrow.
+    expect(await review(false)).toEqual({
+      box: 1,
+      due_on: addDays(today, 1),
+      learned: false,
+    })
+    // Remembered in the top box: learned, out of the review.
+    for (let i = 0; i < 4; i++) await review(true)
+    expect(await review(true)).toEqual({ box: 5, due_on: null, learned: true })
+    const again = await asAlice.rpc("review_word", {
+      word_id: word.id,
+      remembered: true,
+    })
+    expect(again.error).not.toBeNull()
+
+    // The SQL intervals match the app's.
+    for (const box of [1, 2, 3, 4, 5]) {
+      const { data } = await asAlice.rpc("word_review_interval", { box })
+      expect(data).toBe(reviewIntervalDays(box))
+    }
+
+    // Nobody else can review (or see) Alice's word.
+    const bobs = await asBob.rpc("review_word", {
+      word_id: word.id,
+      remembered: true,
+    })
+    expect(bobs.error).not.toBeNull()
   })
 
   it("logs practice on past days only, not future ones", async () => {

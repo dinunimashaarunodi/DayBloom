@@ -5,6 +5,8 @@ import { Suspense } from "react"
 import { Logo } from "@/components/layout/logo"
 import { MainNav, MainNavLinks } from "@/components/layout/main-nav"
 import { OfflineBanner } from "@/components/pwa/offline-banner"
+
+import { OutboxSyncLoader } from "./_outbox/outbox-sync-loader"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -71,6 +73,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-32 sm:px-6 md:px-10 md:py-10">
           <OfflineBanner />
+          <Suspense fallback={null}>
+            <OutboxSyncLoader />
+          </Suspense>
           {children}
         </main>
       </div>

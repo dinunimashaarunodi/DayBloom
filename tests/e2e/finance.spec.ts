@@ -91,6 +91,16 @@ test("set up finance, add expenses and income, and see the month", async ({
   await expect(page.getByText(`Rs${NBSP}1,550.50`).first()).toBeVisible() // Spent
   await expect(page.getByText(`Rs${NBSP}50,000.00`).first()).toBeVisible() // Income
 
+  // Another currency: listed and totalled on its own, never added to LKR.
+  await form.getByRole("radio", { name: "Expense" }).check({ force: true })
+  await form.getByRole("textbox", { name: /Amount/ }).fill("45")
+  await form.getByRole("combobox", { name: "Currency" }).selectOption("USD")
+  await form.getByRole("button", { name: "Add" }).click()
+  await expect(
+    page.getByRole("region", { name: "Other currencies" }),
+  ).toContainText("USD: $45.00 spent")
+  await expect(page.getByText(`Rs${NBSP}1,550.50`).first()).toBeVisible()
+
   const today = todayIn(TZ, new Date())
   const list = page.getByRole("region", { name: "Transactions" })
   await expect(list).toContainText("Food & groceries")

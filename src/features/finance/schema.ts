@@ -24,6 +24,15 @@ export const currencySchema = z.object({
 export const transactionFormSchema = z.object({
   kind: z.enum(TRANSACTION_KINDS, "Choose expense or income."),
   amount: z.string(),
+  /** Blank means the user's main currency. */
+  currency: z
+    .string()
+    .optional()
+    .refine(
+      (value) => !value || isCurrencyCode(value),
+      "Choose a currency from the list.",
+    )
+    .transform((value) => value || null),
   categoryId: z
     .union([z.literal(""), z.uuid()])
     .optional()

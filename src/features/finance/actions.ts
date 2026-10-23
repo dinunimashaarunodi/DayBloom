@@ -24,7 +24,7 @@ import {
 } from "./schema"
 
 const SAVE_ERROR = "We couldn't save that. Please try again."
-const FIELDS = ["kind", "amount", "categoryId", "date", "note"]
+const FIELDS = ["kind", "amount", "currency", "categoryId", "date", "note"]
 
 function revalidateFinance() {
   revalidatePath("/finance", "layout")
@@ -73,7 +73,9 @@ async function parseTransactionForm(formData: FormData) {
     }
     return { ok: false as const, state }
   }
-  const amount = parseAmount(parsed.data.amount, currency)
+  // Each transaction can be in its own currency; the main one by default.
+  const transactionCurrency = parsed.data.currency ?? currency
+  const amount = parseAmount(parsed.data.amount, transactionCurrency)
   if (!amount.ok) {
     const state: ActionState = {
       status: "error",
@@ -89,6 +91,7 @@ async function parseTransactionForm(formData: FormData) {
     row: {
       kind: parsed.data.kind,
       amount_minor: amount.minor,
+      currency: transactionCurrency,
       category_id: parsed.data.categoryId,
       occurred_on: parsed.data.date,
       note: parsed.data.note,
